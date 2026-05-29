@@ -1,4 +1,4 @@
-  import Header from "@/components/Header";
+import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import "@/styles/globals.css";
