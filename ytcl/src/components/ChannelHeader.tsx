@@ -14,7 +14,7 @@ const ChannelHeader = ({ channel, user }: any) => {
         <div className="flex flex-col md:flex-row gap-6 items-start">
           <Avatar className="w-20 h-20 md:w-32 md:h-32">
             <AvatarFallback className="text-2xl">
-              {channel?.channelname[0]}
+              {channel?.channelname?.[0] || "U"}
             </AvatarFallback>
           </Avatar>
 
@@ -24,7 +24,9 @@ const ChannelHeader = ({ channel, user }: any) => {
             </h1>
             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
               <span>
-                @{channel?.channelname.toLowerCase().replace(/\s+/g, "")}
+                @
+                {channel?.channelname?.toLowerCase()?.replace(/\s+/g, "") ||
+                  "user"}
               </span>
             </div>
             {channel?.description && (

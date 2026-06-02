@@ -1,10 +1,10 @@
+"use client";
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { useState } from "react";
 import { createContext } from "react";
 import { provider, auth } from "./firebase";
 import axiosInstance from "./axiosinstance";
 import { useEffect, useContext } from "react";
-("use client");
 
 const UserContext = createContext();
 

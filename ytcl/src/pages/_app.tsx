@@ -8,7 +8,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <UserProvider>
       <div className="min-h-screen bg-white text-black">
-        <title>Your-Tube Clone</title>
+        <title>YtCl</title>
         <Header />
         <Toaster />
         <div className="flex">
