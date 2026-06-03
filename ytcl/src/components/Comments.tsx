@@ -11,6 +11,7 @@ interface Comment {
   userid: string;
   commentbody: string;
   usercommented: string;
+  city: string;
   commentedon: string;
 }
 const Comments = ({ videoId }: any) => {
@@ -56,6 +57,7 @@ const Comments = ({ videoId }: any) => {
   if (loading) {
     return <div>Loading history...</div>;
   }
+
   const handleSubmitComment = async () => {
     if (!user || !newComment.trim()) return;
 
@@ -66,6 +68,7 @@ const Comments = ({ videoId }: any) => {
         userid: user._id,
         commentbody: newComment,
         usercommented: user.name,
+        city: user.city,
       });
       if (res.data.comment) {
         const newCommentObj: Comment = {
@@ -74,6 +77,7 @@ const Comments = ({ videoId }: any) => {
           userid: user._id,
           commentbody: newComment,
           usercommented: user.name || "Anonymous",
+          city: user.city || "",
           commentedon: new Date().toISOString(),
         };
         setComments([newCommentObj, ...comments]);
@@ -174,6 +178,11 @@ const Comments = ({ videoId }: any) => {
                   <span className="font-medium text-sm">
                     {comment.usercommented}
                   </span>
+                  {comment.city && (
+                    <span className="text-xs text-gray-500">
+                      • {comment.city}
+                    </span>
+                  )}
                   <span className="text-xs text-gray-600">
                     {formatDistanceToNow(new Date(comment.commentedon))} ago
                   </span>

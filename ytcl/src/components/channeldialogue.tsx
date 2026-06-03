@@ -26,6 +26,7 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    city: "",
   });
   const [isSubmitting, setisSubmitting] = useState(false);
   useEffect(() => {
@@ -33,11 +34,13 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
       setFormData({
         name: channeldata.name || "",
         description: channeldata.description || "",
+        city: channeldata.city || "",
       });
     } else {
       setFormData({
         name: user?.name || "",
         description: "",
+        city: user?.city || "",
       });
     }
   }, [channeldata]);
@@ -52,6 +55,7 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
     const payload = {
       channelname: formData.name,
       description: formData.description,
+      city: formData.city,
     };
     const response = await axiosInstance.patch(
       `/user/update/${user._id}`,
@@ -62,6 +66,7 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
     setFormData({
       name: "",
       description: "",
+      city: "",
     });
     onclose();
   };
@@ -85,6 +90,18 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
               onChange={handleChange}
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder="Enter your city"
+            />
+          </div>
+
           {/* Channel Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Channel Description</Label>

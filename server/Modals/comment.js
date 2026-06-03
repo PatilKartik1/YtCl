@@ -13,11 +13,17 @@ const commentschema = mongoose.Schema(
     },
     commentbody: { type: String },
     usercommented: { type: String },
+
+    city: {
+      type: String,
+      default: "",
+    },
+
     commentedon: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default mongoose.model("comment", commentschema);
