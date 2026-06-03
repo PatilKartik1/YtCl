@@ -83,8 +83,14 @@ const Comments = ({ videoId }: any) => {
         setComments([newCommentObj, ...comments]);
       }
       setNewComment("");
-    } catch (error) {
-      console.error("Error adding comment:", error);
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        alert(error.response.data.message);
+        return;
+      }
+
+      console.error(error);
+      alert("Something went wrong");
     } finally {
       setIsSubmitting(false);
     }

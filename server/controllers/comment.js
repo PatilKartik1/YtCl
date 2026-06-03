@@ -2,6 +2,16 @@ import comment from "../Modals/comment.js";
 import mongoose from "mongoose";
 
 export const postcomment = async (req, res) => {
+  const { commentbody } = req.body;
+
+  const regex = /^[\p{L}\p{M}\p{N}\s]+$/u;
+
+  if (!regex.test(commentbody)) {
+    return res.status(400).json({
+      message: "Special characters are not allowed",
+    });
+  }
+
   const commentdata = req.body;
   const postcomment = new comment(commentdata);
   try {
