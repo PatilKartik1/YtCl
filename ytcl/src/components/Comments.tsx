@@ -13,6 +13,8 @@ interface Comment {
   usercommented: string;
   city: string;
   commentedon: string;
+  likes: string[];
+  dislikes: string[];
 }
 const Comments = ({ videoId }: any) => {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -221,6 +223,9 @@ const Comments = ({ videoId }: any) => {
                 ) : (
                   <>
                     <p className="text-sm">{comment.commentbody}</p>
+                    <button className="text-sm mt-2">
+                      👍 {comment.likes?.length || 0}
+                    </button>
                     {comment.userid === user?._id && (
                       <div className="flex gap-2 mt-2 text-sm text-gray-500">
                         <button onClick={() => handleEdit(comment)}>

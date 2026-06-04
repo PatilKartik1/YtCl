@@ -19,19 +19,19 @@ const commentschema = mongoose.Schema(
       default: "",
     },
 
-likes: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "user",
-  },
-],
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+      },
+    ],
 
-dislikes: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "user",
-  },
-],
+    dislikes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+      },
+    ],
 
     commentedon: { type: Date, default: Date.now },
   },

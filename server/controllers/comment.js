@@ -62,3 +62,31 @@ export const editcomment = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+export const likecomment = async (req, res) => {
+  const { id } = req.params;
+  const { userid } = req.body;
+
+  try {
+    const commentdata = await comment.findById(id);
+
+    if (!commentdata) {
+      return res.status(404).json({
+        message: "Comment not found",
+      });
+    }
+
+    if (!commentdata.likes.includes(userid)) {
+      commentdata.likes.push(userid);
+    }
+
+    await commentdata.save();
+
+    return res.status(200).json(commentdata);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Something went wrong",
+    });
+  }
+};
