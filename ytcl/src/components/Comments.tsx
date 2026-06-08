@@ -81,6 +81,8 @@ const Comments = ({ videoId }: any) => {
           usercommented: user.name || "Anonymous",
           city: user.city || "",
           commentedon: new Date().toISOString(),
+          likes: [],
+          dislikes: [],
         };
         setComments([newCommentObj, ...comments]);
       }
@@ -134,6 +136,19 @@ const Comments = ({ videoId }: any) => {
       console.log(error);
     }
   };
+
+  const handleLike = async (commentId: string) => {
+    try {
+      await axiosInstance.patch(`/comment/like/${commentId}`, {
+        userid: user?._id,
+      });
+
+      loadComments();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">{comments.length} Comments</h2>
@@ -223,7 +238,10 @@ const Comments = ({ videoId }: any) => {
                 ) : (
                   <>
                     <p className="text-sm">{comment.commentbody}</p>
-                    <button className="text-sm mt-2">
+                    <button
+                      className="text-sm mt-2"
+                      onClick={() => handleLike(comment._id)}
+                    >
                       👍 {comment.likes?.length || 0}
                     </button>
                     {comment.userid === user?._id && (
