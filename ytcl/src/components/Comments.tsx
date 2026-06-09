@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+
 interface Comment {
   _id: string;
   videoid: string;
@@ -16,6 +17,7 @@ interface Comment {
   likes: string[];
   dislikes: string[];
 }
+
 const Comments = ({ videoId }: any) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -24,24 +26,7 @@ const Comments = ({ videoId }: any) => {
   const [editText, setEditText] = useState("");
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
-  const fetchedComments = [
-    {
-      _id: "1",
-      videoid: videoId,
-      userid: "1",
-      commentbody: "Great video! Really enjoyed watching this.",
-      usercommented: "John Doe",
-      commentedon: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      _id: "2",
-      videoid: videoId,
-      userid: "2",
-      commentbody: "Thanks for sharing this amazing content!",
-      usercommented: "Jane Smith",
-      commentedon: new Date(Date.now() - 7200000).toISOString(),
-    },
-  ];
+
   useEffect(() => {
     loadComments();
   }, [videoId]);
@@ -56,8 +41,9 @@ const Comments = ({ videoId }: any) => {
       setLoading(false);
     }
   };
+
   if (loading) {
-    return <div>Loading history...</div>;
+    return <div>Loading comments...</div>;
   }
 
   const handleSubmitComment = async () => {
@@ -92,7 +78,6 @@ const Comments = ({ videoId }: any) => {
         alert(error.response.data.message);
         return;
       }
-
       console.error(error);
       alert("Something went wrong");
     } finally {
@@ -110,13 +95,13 @@ const Comments = ({ videoId }: any) => {
     try {
       const res = await axiosInstance.post(
         `/comment/editcomment/${editingCommentId}`,
-        { commentbody: editText },
+        { commentbody: editText }
       );
       if (res.data) {
         setComments((prev) =>
           prev.map((c) =>
-            c._id === editingCommentId ? { ...c, commentbody: editText } : c,
-          ),
+            c._id === editingCommentId ? { ...c, commentbody: editText } : c
+          )
         );
         setEditingCommentId(null);
         setEditText("");
@@ -138,21 +123,48 @@ const Comments = ({ videoId }: any) => {
   };
 
   const handleLike = async (commentId: string) => {
-  try {
-    const response = await axiosInstance.patch(
-      `/comment/like/${commentId}`,
-      {
-        userid: user?._id,
-      },
-    );
+    if (!user) return;
+    try {
+      const response = await axiosInstance.patch(
+        `/comment/like/${commentId}`,
+        { userid: user?._id }
+      );
+      setComments((prev) =>
+        prev.map((c) =>
+          c._id === commentId
+            ? { ...c, likes: response.data.likes }
+            : c
+        )
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-    console.log("Like Response:", response.data);
-
-    loadComments();
-  } catch (error) {
-    console.log(error);
-  }
-};
+  const handleDislike = async (commentId: string) => {
+    if (!user) return;
+    try {
+      const response = await axiosInstance.patch(
+        `/comment/dislike/${commentId}`,
+        { userid: user?._id }
+      );
+      if (response.data.deleted) {
+        // Auto-removed due to 2 dislikes
+        setComments((prev) => prev.filter((c) => c._id !== commentId));
+      } else {
+        // Update dislikes in state
+        setComments((prev) =>
+          prev.map((c) =>
+            c._id === commentId
+              ? { ...c, dislikes: response.data.dislikes }
+              : c
+          )
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -189,6 +201,7 @@ const Comments = ({ videoId }: any) => {
           </div>
         </div>
       )}
+
       <div className="space-y-4">
         {comments.length === 0 ? (
           <p className="text-sm text-gray-500 italic">
@@ -243,12 +256,22 @@ const Comments = ({ videoId }: any) => {
                 ) : (
                   <>
                     <p className="text-sm">{comment.commentbody}</p>
-                    <button
-                      className="text-sm mt-2"
-                      onClick={() => handleLike(comment._id)}
-                    >
-                      👍 {comment.likes?.length || 0}
-                    </button>
+
+                    <div className="flex items-center gap-3 mt-2">
+                      <button
+                        className="text-sm flex items-center gap-1 hover:text-blue-500 transition-colors"
+                        onClick={() => handleLike(comment._id)}
+                      >
+                        👍 {comment.likes?.length || 0}
+                      </button>
+                      <button
+                        className="text-sm flex items-center gap-1 hover:text-red-500 transition-colors"
+                        onClick={() => handleDislike(comment._id)}
+                      >
+                        👎 {comment.dislikes?.length || 0}
+                      </button>
+                    </div>
+
                     {comment.userid === user?._id && (
                       <div className="flex gap-2 mt-2 text-sm text-gray-500">
                         <button onClick={() => handleEdit(comment)}>

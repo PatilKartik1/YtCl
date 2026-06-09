@@ -96,3 +96,43 @@ export const likecomment = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+export const dislikecomment = async (req, res) => {
+  const { id } = req.params;
+  const { userid } = req.body;
+
+  try {
+    const commentdata = await comment.findById(id);
+
+    if (!commentdata) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    // Toggle dislike
+    const alreadyDisliked = commentdata.dislikes.some(
+      (dislike) => dislike.toString() === userid.toString(),
+    );
+
+    if (alreadyDisliked) {
+      // Remove dislike
+      commentdata.dislikes = commentdata.dislikes.filter(
+        (dislike) => dislike.toString() !== userid.toString(),
+      );
+    } else {
+      // Add dislike
+      commentdata.dislikes.push(new mongoose.Types.ObjectId(userid));
+
+      // Auto-remove comment if dislikes reach 2
+      if (commentdata.dislikes.length >= 2) {
+        await comment.findByIdAndDelete(id);
+        return res.status(200).json({ deleted: true });
+      }
+    }
+
+    await commentdata.save();
+    return res.status(200).json(commentdata);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
