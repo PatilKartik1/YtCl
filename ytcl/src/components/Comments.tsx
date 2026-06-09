@@ -138,16 +138,21 @@ const Comments = ({ videoId }: any) => {
   };
 
   const handleLike = async (commentId: string) => {
-    try {
-      await axiosInstance.patch(`/comment/like/${commentId}`, {
+  try {
+    const response = await axiosInstance.patch(
+      `/comment/like/${commentId}`,
+      {
         userid: user?._id,
-      });
+      },
+    );
 
-      loadComments();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    console.log("Like Response:", response.data);
+
+    loadComments();
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   return (
     <div className="space-y-6">

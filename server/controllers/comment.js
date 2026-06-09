@@ -71,22 +71,28 @@ export const likecomment = async (req, res) => {
     const commentdata = await comment.findById(id);
 
     if (!commentdata) {
-      return res.status(404).json({
-        message: "Comment not found",
-      });
+      return res.status(404).json({ message: "Comment not found" });
     }
 
-    if (!commentdata.likes.includes(userid)) {
-      commentdata.likes.push(userid);
+    // Convert ObjectId array to strings for safe comparison
+    const alreadyLiked = commentdata.likes.some(
+      (like) => like.toString() === userid.toString(),
+    );
+
+    if (alreadyLiked) {
+      // Remove the like using filter
+      commentdata.likes = commentdata.likes.filter(
+        (like) => like.toString() !== userid.toString(),
+      );
+    } else {
+      // Add the like — mongoose will auto-convert string to ObjectId
+      commentdata.likes.push(new mongoose.Types.ObjectId(userid));
     }
 
     await commentdata.save();
-
     return res.status(200).json(commentdata);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      message: "Something went wrong",
-    });
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };
