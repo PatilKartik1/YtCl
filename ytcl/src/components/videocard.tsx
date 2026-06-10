@@ -3,6 +3,13 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 
+const formatDuration = (seconds: number) => {
+  if (!seconds) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+};
+
 const videos = "/video/vdo.mp4";
 export default function VideoCard({ video }: any) {
   return (
@@ -14,7 +21,7 @@ export default function VideoCard({ video }: any) {
             className="object-cover group-hover:scale-105 transition-transform duration-200"
           />
           <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">
-            10:24
+            {formatDuration(video?.duration)}
           </div>
         </div>
         <div className="flex gap-3">

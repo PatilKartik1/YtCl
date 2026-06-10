@@ -1,27 +1,43 @@
 import video from "../Modals/video.js";
+import ffmpeg from "fluent-ffmpeg";
+import ffprobeStatic from "ffprobe-static";
+
+ffmpeg.setFfprobePath(ffprobeStatic.path);
+
+const getVideoDuration = (filepath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filepath, (err, metadata) => {
+      if (err) reject(err);
+      else resolve(Math.floor(metadata.format.duration)); // duration in seconds
+    });
+  });
+};
 
 export const uploadvideo = async (req, res) => {
   if (req.file === undefined) {
     return res
       .status(404)
       .json({ message: "plz upload a mp4 video file only" });
-  } else {
-    try {
-      const file = new video({
-        videotitle: req.body.videotitle,
-        filename: req.file.originalname,
-        filepath: req.file.path,
-        filetype: req.file.mimetype,
-        filesize: req.file.size,
-        videochanel: req.body.videochanel,
-        uploader: req.body.uploader,
-      });
-      await file.save();
-      return res.status(201).json("file uploaded successfully");
-    } catch (error) {
-      console.error(" error:", error);
-      return res.status(500).json({ message: "Something went wrong" });
-    }
+  }
+  try {
+    // Get real duration from the uploaded file
+    const duration = await getVideoDuration(req.file.path);
+
+    const file = new video({
+      videotitle: req.body.videotitle,
+      filename: req.file.originalname,
+      filepath: req.file.path,
+      filetype: req.file.mimetype,
+      filesize: req.file.size,
+      videochanel: req.body.videochanel,
+      uploader: req.body.uploader,
+      duration: duration, // ← save real duration
+    });
+    await file.save();
+    return res.status(201).json("file uploaded successfully");
+  } catch (error) {
+    console.error("error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };
 export const getallvideo = async (req, res) => {
