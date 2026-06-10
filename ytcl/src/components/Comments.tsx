@@ -27,6 +27,25 @@ const Comments = ({ videoId }: any) => {
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
 
+  const [translatedComments, setTranslatedComments] = useState<{
+    [key: string]: string;
+  }>({});
+  const [translatingId, setTranslatingId] = useState<string | null>(null);
+  const [showLangPicker, setShowLangPicker] = useState<string | null>(null);
+
+  const languages = [
+    { code: "hi", label: "Hindi" },
+    { code: "mr", label: "Marathi" },
+    { code: "en", label: "English" },
+    { code: "fr", label: "French" },
+    { code: "es", label: "Spanish" },
+    { code: "de", label: "German" },
+    { code: "ja", label: "Japanese" },
+    { code: "ko", label: "Korean" },
+    { code: "zh", label: "Chinese" },
+    { code: "ar", label: "Arabic" },
+  ];
+
   useEffect(() => {
     loadComments();
   }, [videoId]);
@@ -95,13 +114,13 @@ const Comments = ({ videoId }: any) => {
     try {
       const res = await axiosInstance.post(
         `/comment/editcomment/${editingCommentId}`,
-        { commentbody: editText }
+        { commentbody: editText },
       );
       if (res.data) {
         setComments((prev) =>
           prev.map((c) =>
-            c._id === editingCommentId ? { ...c, commentbody: editText } : c
-          )
+            c._id === editingCommentId ? { ...c, commentbody: editText } : c,
+          ),
         );
         setEditingCommentId(null);
         setEditText("");
@@ -125,16 +144,13 @@ const Comments = ({ videoId }: any) => {
   const handleLike = async (commentId: string) => {
     if (!user) return;
     try {
-      const response = await axiosInstance.patch(
-        `/comment/like/${commentId}`,
-        { userid: user?._id }
-      );
+      const response = await axiosInstance.patch(`/comment/like/${commentId}`, {
+        userid: user?._id,
+      });
       setComments((prev) =>
         prev.map((c) =>
-          c._id === commentId
-            ? { ...c, likes: response.data.likes }
-            : c
-        )
+          c._id === commentId ? { ...c, likes: response.data.likes } : c,
+        ),
       );
     } catch (error) {
       console.log(error);
@@ -146,7 +162,7 @@ const Comments = ({ videoId }: any) => {
     try {
       const response = await axiosInstance.patch(
         `/comment/dislike/${commentId}`,
-        { userid: user?._id }
+        { userid: user?._id },
       );
       if (response.data.deleted) {
         // Auto-removed due to 2 dislikes
@@ -157,13 +173,46 @@ const Comments = ({ videoId }: any) => {
           prev.map((c) =>
             c._id === commentId
               ? { ...c, dislikes: response.data.dislikes }
-              : c
-          )
+              : c,
+          ),
         );
       }
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleTranslate = async (
+    commentId: string,
+    text: string,
+    targetLang: string,
+  ) => {
+    setTranslatingId(commentId);
+    setShowLangPicker(null);
+    try {
+      const res = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`,
+      );
+      const data = await res.json();
+      const translated = data.responseData.translatedText;
+      setTranslatedComments((prev) => ({
+        ...prev,
+        [commentId]: translated,
+      }));
+    } catch (error) {
+      console.log("Translation error:", error);
+      alert("Translation failed, please try again.");
+    } finally {
+      setTranslatingId(null);
+    }
+  };
+
+  const handleShowOriginal = (commentId: string) => {
+    setTranslatedComments((prev) => {
+      const updated = { ...prev };
+      delete updated[commentId];
+      return updated;
+    });
   };
 
   return (
@@ -255,7 +304,58 @@ const Comments = ({ videoId }: any) => {
                   </div>
                 ) : (
                   <>
-                    <p className="text-sm">{comment.commentbody}</p>
+                    {/* Comment body — shows translated or original */}
+                    <p className="text-sm">
+                      {translatedComments[comment._id] || comment.commentbody}
+                    </p>
+
+                    {/* Translate controls */}
+                    <div className="relative mt-1">
+                      {translatedComments[comment._id] ? (
+                        <button
+                          className="text-xs text-blue-500 hover:underline"
+                          onClick={() => handleShowOriginal(comment._id)}
+                        >
+                          Show Original
+                        </button>
+                      ) : (
+                        <button
+                          className="text-xs text-gray-400 hover:text-blue-500"
+                          onClick={() =>
+                            setShowLangPicker(
+                              showLangPicker === comment._id
+                                ? null
+                                : comment._id,
+                            )
+                          }
+                        >
+                          {translatingId === comment._id
+                            ? "Translating..."
+                            : "Translate"}
+                        </button>
+                      )}
+
+                      {/* Language picker dropdown */}
+                      {showLangPicker === comment._id && (
+                        <div className="absolute z-10 mt-1 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg p-2 grid grid-cols-2 gap-1 w-48">
+                          {languages.map((lang) => (
+                            <button
+                              key={lang.code}
+                              className="text-xs text-left px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-700"
+                              onClick={() =>
+                                handleTranslate(
+                                  comment._id,
+                                  comment.commentbody,
+                                  lang.code,
+                                )
+                              }
+                            >
+                              {lang.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
                     <div className="flex items-center gap-3 mt-2">
                       <button
