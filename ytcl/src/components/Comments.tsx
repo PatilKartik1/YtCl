@@ -191,7 +191,7 @@ const Comments = ({ videoId }: any) => {
     setShowLangPicker(null);
     try {
       const res = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`,
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair= autodetect|${targetLang}`,
       );
       const data = await res.json();
       const translated = data.responseData.translatedText;
