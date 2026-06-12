@@ -31,7 +31,7 @@ export const uploadvideo = async (req, res) => {
       filesize: req.file.size,
       videochanel: req.body.videochanel,
       uploader: req.body.uploader,
-      duration: duration, // ← save real duration
+      duration: duration,
     });
     await file.save();
     return res.status(201).json("file uploaded successfully");
@@ -40,10 +40,22 @@ export const uploadvideo = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 export const getallvideo = async (req, res) => {
   try {
     const files = await video.find();
     return res.status(200).send(files);
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const getChannelVideos = async (req, res) => {
+  const { uploaderId } = req.params;
+  try {
+    const videos = await video.find({ uploader: uploaderId }).sort({ createdAt: -1 });
+    return res.status(200).json(videos);
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });

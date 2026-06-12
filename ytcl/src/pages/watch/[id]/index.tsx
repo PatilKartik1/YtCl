@@ -4,15 +4,15 @@ import VideoInfo from "@/components/VideoInfo";
 import Videoplayer from "@/components/videoplayer";
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
+import {
+  formatWatchLimit,
+  getWatchLimitSeconds,
+} from "@/lib/planLimits";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
-
-const watchLimits: any = {
-  free: 5 * 60, // 5 minutes in seconds
-  bronze: 7 * 60, // 7 minutes
-  silver: 10 * 60, // 10 minutes
-  gold: Infinity, // unlimited
-};
+import { Button } from "@/components/ui/button";
+import { Crown } from "lucide-react";
 
 const index = () => {
   const router = useRouter();
@@ -20,9 +20,10 @@ const index = () => {
   const [videos, setvideo] = useState<any>(null);
   const [video, setvide] = useState<any>(null);
   const [loading, setloading] = useState(true);
+  const [limitHit, setLimitHit] = useState(false);
   const { user } = useUser();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const limitReached = useRef(false); // prevent multiple alerts
+  const limitReached = useRef(false);
 
   useEffect(() => {
     const fetchvideo = async () => {
@@ -41,24 +42,23 @@ const index = () => {
     fetchvideo();
   }, [id]);
 
-  // Watch time limiter
   useEffect(() => {
     const videoEl = videoRef.current;
-    if (!videoEl || !user) return;
+    if (!videoEl) return;
 
-    limitReached.current = false; // reset on new video
+    limitReached.current = false;
+    setLimitHit(false);
 
-    const plan = user.plan || "free";
-    const limit = watchLimits[plan];
+    const plan = user?.plan || "free";
+    const limit = getWatchLimitSeconds(plan);
+
+    if (!isFinite(limit)) return;
 
     const handleTimeUpdate = () => {
       if (!limitReached.current && videoEl.currentTime >= limit) {
         limitReached.current = true;
         videoEl.pause();
-        const upgrade = confirm(
-          `⏱ Your ${plan.toUpperCase()} plan allows only ${limit / 60} minutes of watching.\n\nClick OK to upgrade your plan!`,
-        );
-        if (upgrade) router.push("/upgrade");
+        setLimitHit(true);
       }
     };
 
@@ -74,12 +74,33 @@ const index = () => {
     return <div>Video not found</div>;
   }
 
+  const currentPlan = user?.plan || "free";
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
-            <Videoplayer video={videos} videoRef={videoRef} />
+            <div className="relative">
+              <Videoplayer video={videos} videoRef={videoRef} />
+              {limitHit && (
+                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-lg text-white p-6 text-center">
+                  <Crown className="w-10 h-10 mb-3 text-yellow-400" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    Watch limit reached
+                  </h3>
+                  <p className="text-sm text-gray-300 mb-4 max-w-sm">
+                    Your {currentPlan} plan allows {formatWatchLimit(currentPlan)}{" "}
+                    of watching per video. Upgrade to watch more.
+                  </p>
+                  <Link href="/upgrade">
+                    <Button className="bg-red-600 hover:bg-red-700">
+                      Upgrade your plan
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
             <VideoInfo video={videos} />
             <Comments videoId={id} />
           </div>

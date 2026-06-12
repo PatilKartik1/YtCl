@@ -1,14 +1,14 @@
 import "../config.js";
 import Razorpay from "razorpay";
-import crypto from "crypto";
+import { validatePaymentVerification } from "razorpay/dist/utils/razorpay-utils.js";
 import users from "../Modals/Auth.js";
 import nodemailer from "nodemailer";
 
-console.log("KEY ID:", process.env.RAZORPAY_KEY_ID);
+const getRazorpaySecret = () => process.env.RAZORPAY_KEY_SECRET?.trim();
 
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
+  key_id: process.env.RAZORPAY_KEY_ID?.trim(),
+  key_secret: getRazorpaySecret(),
 });
 
 // Plan prices in paise (1 INR = 100 paise)
@@ -19,9 +19,16 @@ const planPrices = {
   premium: 100, // ₹1 for download premium (test)
 };
 
+const validPlans = ["bronze", "silver", "gold"];
+
 // Create Razorpay order
 export const createOrder = async (req, res) => {
   const { plan } = req.body;
+
+  if (!validPlans.includes(plan)) {
+    return res.status(400).json({ message: "Invalid plan selected" });
+  }
+
   try {
     const order = await razorpay.orders.create({
       amount: planPrices[plan],
@@ -35,42 +42,85 @@ export const createOrder = async (req, res) => {
   }
 };
 
+const verifyRazorpayPayment = async ({
+  razorpay_order_id,
+  razorpay_payment_id,
+  razorpay_signature,
+}) => {
+  const secret = getRazorpaySecret();
+  if (!secret) {
+    throw new Error("RAZORPAY_KEY_SECRET is not configured");
+  }
+
+  const orderId = String(razorpay_order_id).trim();
+  const paymentId = String(razorpay_payment_id).trim();
+  const signature = String(razorpay_signature).trim();
+
+  const signatureValid = validatePaymentVerification(
+    { order_id: orderId, payment_id: paymentId },
+    signature,
+    secret,
+  );
+
+  if (signatureValid) return true;
+
+  // Fallback: confirm payment directly with Razorpay API
+  const payment = await razorpay.payments.fetch(paymentId);
+  return (
+    payment.order_id === orderId &&
+    ["captured", "authorized"].includes(payment.status)
+  );
+};
+
 // Verify payment and update user plan
 export const verifyPayment = async (req, res) => {
   const {
     razorpay_order_id,
     razorpay_payment_id,
     razorpay_signature,
-    userId,
     plan,
   } = req.body;
+  const userId = req.userId;
 
-  console.log("Order ID:", razorpay_order_id);
-  console.log("Payment ID:", razorpay_payment_id);
-  console.log("Signature received:", razorpay_signature);
-  console.log("Key Secret being used:", process.env.RAZORPAY_KEY_SECRET);
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ message: "Missing payment verification fields" });
+  }
+
+  if (!validPlans.includes(plan)) {
+    return res.status(400).json({ message: "Invalid plan selected" });
+  }
 
   try {
-    // Verify signature
-    const sign = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSign = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(sign)
-      .toString("hex");
+    const isValid = await verifyRazorpayPayment({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
 
-    if (expectedSign !== razorpay_signature) {
-      return res.status(400).json({ message: "Invalid payment signature" });
+    if (!isValid) {
+      return res.status(400).json({
+        message:
+          "Payment verification failed. Ensure RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in server/.env match your Razorpay test dashboard keys.",
+      });
     }
 
-    // Update user plan
+    // Update user plan in DB
     const updatedUser = await users.findByIdAndUpdate(
       userId,
       { $set: { plan: plan } },
       { new: true },
     );
 
-    // Send email
-    await sendInvoiceEmail(updatedUser, plan, razorpay_payment_id);
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send invoice email — non-fatal: don't let email failure block payment success
+    try {
+      await sendInvoiceEmail(updatedUser, plan, razorpay_payment_id);
+    } catch (emailError) {
+      console.warn("Invoice email failed (non-critical):", emailError.message);
+    }
 
     return res.status(200).json({ success: true, user: updatedUser });
   } catch (error) {
@@ -110,7 +160,7 @@ const sendInvoiceEmail = async (user, plan, paymentId) => {
       <p>Amount Paid: ${planDetails[plan].price}</p>
       <p>Payment ID: ${paymentId}</p>
       <p>Watch Limit: ${planDetails[plan].watchLimit}</p>
-      <p>Downloads: ${planDetails[plan].downloads}/day</p>
+      <p>Downloads: ${planDetails[plan].downloads}</p>
       <hr/>
       <p>Thank you for upgrading!</p>
       <p>Team YtCl</p>
@@ -120,7 +170,8 @@ const sendInvoiceEmail = async (user, plan, paymentId) => {
 
 // Track and handle download
 export const downloadVideo = async (req, res) => {
-  const { userId, videoId, videoTitle } = req.body;
+  const { videoId, videoTitle } = req.body;
+  const userId = req.userId;
 
   try {
     const user = await users.findById(userId);
@@ -137,11 +188,11 @@ export const downloadVideo = async (req, res) => {
       user.lastDownloadDate = new Date();
     }
 
-    // Free users limited to 1 download per day
+    // Free users limited to 1 download per day; paid plans get unlimited
     if (user.plan === "free" && user.downloadCount >= 1) {
       return res.status(403).json({
         message:
-          "Free users can only download 1 video per day. Upgrade to premium!",
+          "Free users can only download 1 video per day. Upgrade to a premium plan!",
         limitReached: true,
       });
     }
@@ -151,7 +202,35 @@ export const downloadVideo = async (req, res) => {
     user.downloadCount += 1;
     await user.save();
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// Get user's download history with populated video details
+export const getDownloads = async (req, res) => {
+  try {
+    const user = await users
+      .findById(req.userId)
+      .populate({ path: "downloads.videoId", model: "videofiles" });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const downloads = [...user.downloads]
+      .sort(
+        (a, b) =>
+          new Date(b.downloadedAt).getTime() -
+          new Date(a.downloadedAt).getTime(),
+      )
+      .filter((dl) => dl.videoId);
+
+    return res.status(200).json({
+      downloads,
+      plan: user.plan,
+      downloadCount: user.downloadCount,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Something went wrong" });

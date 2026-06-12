@@ -3,8 +3,9 @@ import {
   getallwatchlater,
   handlewatchlater,
 } from "../controllers/watchlater.js";
+import authMiddleware from "../middleware/auth.js";
 
 const routes = express.Router();
-routes.get("/:userId", getallwatchlater);
-routes.post("/:videoId", handlewatchlater);
+routes.get("/:userId", authMiddleware, getallwatchlater);
+routes.post("/:videoId", authMiddleware, handlewatchlater);
 export default routes;

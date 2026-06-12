@@ -4,7 +4,9 @@ import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { getVideoUrl } from "@/lib/planLimits";
 import { useRouter } from "next/router";
+import { toast } from "sonner";
 
 const formatDuration = (seconds: number) => {
   if (!seconds) return "0:00";
@@ -14,35 +16,46 @@ const formatDuration = (seconds: number) => {
 };
 
 export default function VideoCard({ video }: any) {
-  const { user } = useUser();
+  const { user, updateUser } = useUser();
   const router = useRouter();
 
   const handleDownload = async (e: React.MouseEvent) => {
-    e.preventDefault(); // prevent navigating to watch page
-    if (!user) return router.push("/login");
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Please sign in to download videos.");
+      return;
+    }
 
     try {
-      const res = await axiosInstance.post("/payment/download", {
-        userId: user._id,
+      const { data } = await axiosInstance.post("/payment/download", {
         videoId: video._id,
         videoTitle: video.videotitle,
       });
 
-      if (res.data.success) {
-        // Trigger actual file download
-        const link = document.createElement("a");
-        link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${video.filepath}`;
-        link.download = video.videotitle;
-        link.click();
-      }
+      if (data.user) updateUser(data.user);
+
+      const link = document.createElement("a");
+      link.href = getVideoUrl(video.filepath);
+      link.download = video.videotitle;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Download started!");
     } catch (error: any) {
-      if (error.response?.status === 403) {
-        const upgrade = confirm(
-          "⚠️ Free users can only download 1 video per day.\n\nClick OK to upgrade to premium!",
+      if (error.response?.status === 403 && error.response?.data?.limitReached) {
+        toast.error(
+          "Daily download limit reached. Upgrade for unlimited downloads!",
+          {
+            action: {
+              label: "Upgrade",
+              onClick: () => router.push("/upgrade"),
+            },
+            duration: 6000,
+          },
         );
-        if (upgrade) router.push("/upgrade");
       } else {
-        alert("Download failed. Try again.");
+        toast.error("Download failed. Please try again.");
       }
     }
   };

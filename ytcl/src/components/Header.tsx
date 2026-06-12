@@ -1,4 +1,4 @@
-import { Bell, Menu, Mic, Search, User, VideoIcon } from "lucide-react";
+import { Bell, Crown, Menu, Mic, Search, User, VideoIcon } from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
@@ -80,6 +80,18 @@ const Header = () => {
       <div className="flex items-center gap-2">
         {user ? (
           <>
+            <Link href="/upgrade">
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden sm:flex items-center gap-1 text-red-600 border-red-200 hover:bg-red-50"
+              >
+                <Crown className="w-4 h-4" />
+                {user.plan && user.plan !== "free"
+                  ? user.plan.charAt(0).toUpperCase() + user.plan.slice(1)
+                  : "Upgrade"}
+              </Button>
+            </Link>
             <Button variant="ghost" size="icon">
               <VideoIcon className="w-6 h-6" />
             </Button>
@@ -123,6 +135,12 @@ const Header = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/watch-later">Watch later</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/downloads">Downloads</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/upgrade">Upgrade plan</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>Sign out</DropdownMenuItem>

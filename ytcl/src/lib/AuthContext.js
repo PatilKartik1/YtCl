@@ -11,13 +11,21 @@ const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  const login = (userdata) => {
+  const login = (userdata, token) => {
+    setUser(userdata);
+    localStorage.setItem("user", JSON.stringify(userdata));
+    if (token) {
+      localStorage.setItem("token", token);
+    }
+  };
+  const updateUser = (userdata) => {
     setUser(userdata);
     localStorage.setItem("user", JSON.stringify(userdata));
   };
   const logout = async () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     try {
       await signOut(auth);
     } catch (error) {
@@ -34,7 +42,7 @@ export const UserProvider = ({ children }) => {
         image: firebaseuser.photoURL || "https://github.com/shadcn.png",
       };
       const response = await axiosInstance.post("/user/login", payload);
-      login(response.data.result);
+      login(response.data.result, response.data.token);
     } catch (error) {
       console.error(error);
     }
@@ -49,7 +57,7 @@ export const UserProvider = ({ children }) => {
             image: firebaseuser.photoURL || "https://github.com/shadcn.png",
           };
           const response = await axiosInstance.post("/user/login", payload);
-          login(response.data.result);
+          login(response.data.result, response.data.token);
         } catch (error) {
           console.error(error);
           logout();
@@ -60,7 +68,9 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, login, logout, handlegooglesignin }}>
+    <UserContext.Provider
+      value={{ user, login, logout, updateUser, handlegooglesignin }}
+    >
       {children}
     </UserContext.Provider>
   );

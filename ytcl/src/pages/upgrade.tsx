@@ -3,6 +3,7 @@ import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -32,52 +33,70 @@ const plans = [
 ];
 
 export default function Upgrade() {
-  const { user, setUser } = useUser();
+  const { user, updateUser } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
   const handlePayment = async (plan: any) => {
-    if (!user) return router.push("/login");
+    if (!user) {
+      toast.error("Please sign in to upgrade your plan.");
+      return;
+    }
     setLoading(plan.id);
 
     try {
-      // Create order on backend
-      const { data: order } = await axiosInstance.post(
-        "/payment/create-order",
-        {
-          plan: plan.id,
-        },
+      const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.replace(
+        /"/g,
+        "",
       );
 
-      // Open Razorpay popup
+      if (!razorpayKey) {
+        toast.error("Razorpay key is missing. Check ytcl/.env");
+        setLoading(null);
+        return;
+      }
+
+      const { data: order } = await axiosInstance.post(
+        "/payment/create-order",
+        { plan: plan.id },
+      );
+
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: razorpayKey,
         amount: order.amount,
-        currency: "INR",
+        currency: order.currency || "INR",
         name: "YtCl",
         description: `${plan.name} Plan`,
         order_id: order.id,
         handler: async (response: any) => {
           try {
-            // Verify payment on backend
             const { data } = await axiosInstance.post("/payment/verify", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              userId: user._id,
               plan: plan.id,
             });
 
             if (data.success) {
-              setUser(data.user);
-              alert(
-                `🎉 ${plan.name} plan activated! Check your email for invoice.`,
+              updateUser(data.user);
+              toast.success(
+                `${plan.name} plan activated! Check your email for the invoice.`,
               );
               router.push("/");
             }
-          } catch (error) {
-            alert("Payment verification failed. Contact support.");
+          } catch (error: any) {
+            const msg =
+              error?.response?.data?.message ||
+              error?.message ||
+              "Unknown error";
+            console.error("Payment verify failed:", error?.response?.status, msg);
+            toast.error(`Payment verification failed: ${msg}`);
+          } finally {
+            setLoading(null);
           }
+        },
+        modal: {
+          ondismiss: () => setLoading(null),
         },
         prefill: {
           name: user.name,
@@ -87,10 +106,13 @@ export default function Upgrade() {
       };
 
       const razor = new (window as any).Razorpay(options);
+      razor.on("payment.failed", () => {
+        toast.error("Payment failed. Please try again.");
+        setLoading(null);
+      });
       razor.open();
     } catch (error) {
-      alert("Something went wrong. Try again.");
-    } finally {
+      toast.error("Something went wrong. Please try again.");
       setLoading(null);
     }
   };

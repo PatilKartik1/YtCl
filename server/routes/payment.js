@@ -3,14 +3,15 @@ import {
   createOrder,
   verifyPayment,
   downloadVideo,
+  getDownloads,
 } from "../controllers/payment.js";
-
-console.log("KEY ID:", process.env.RAZORPAY_KEY_ID);
+import authMiddleware from "../middleware/auth.js";
 
 const routes = express.Router();
 
-routes.post("/create-order", createOrder);
-routes.post("/verify", verifyPayment);
-routes.post("/download", downloadVideo);
+routes.post("/create-order", authMiddleware, createOrder);
+routes.post("/verify", authMiddleware, verifyPayment);
+routes.post("/download", authMiddleware, downloadVideo);
+routes.get("/downloads", authMiddleware, getDownloads);
 
 export default routes;

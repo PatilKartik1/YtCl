@@ -12,6 +12,9 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { getVideoUrl } from "@/lib/planLimits";
+import { useRouter } from "next/router";
+import { toast } from "sonner";
 
 const VideoInfo = ({ video }: any) => {
   const [likes, setlikes] = useState(video.Like || 0);
@@ -19,15 +22,11 @@ const VideoInfo = ({ video }: any) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const { user } = useUser();
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { user, updateUser } = useUser();
   const [isWatchLater, setIsWatchLater] = useState(false);
+  const router = useRouter();
 
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
   useEffect(() => {
     setlikes(video.Like || 0);
     setDislikes(video.Dislike || 0);
@@ -51,6 +50,7 @@ const VideoInfo = ({ video }: any) => {
     };
     handleviews();
   }, [user]);
+
   const handleLike = async () => {
     if (!user) return;
     try {
@@ -74,6 +74,7 @@ const VideoInfo = ({ video }: any) => {
       console.log(error);
     }
   };
+
   const handleWatchLater = async () => {
     try {
       const res = await axiosInstance.post(`/watch/${video._id}`, {
@@ -88,29 +89,63 @@ const VideoInfo = ({ video }: any) => {
       console.log(error);
     }
   };
-  const handleDislike = async () => {
+
+  const handleDislike = () => {
     if (!user) return;
-    try {
-      const res = await axiosInstance.post(`/like/${video._id}`, {
-        userId: user?._id,
-      });
-      if (!res.data.liked) {
-        if (isDisliked) {
-          setDislikes((prev: any) => prev - 1);
-          setIsDisliked(false);
-        } else {
-          setDislikes((prev: any) => prev + 1);
-          setIsDisliked(true);
-          if (isLiked) {
-            setlikes((prev: any) => prev - 1);
-            setIsLiked(false);
-          }
-        }
+    if (isDisliked) {
+      setDislikes((prev: any) => prev - 1);
+      setIsDisliked(false);
+    } else {
+      setDislikes((prev: any) => prev + 1);
+      setIsDisliked(true);
+      if (isLiked) {
+        setlikes((prev: any) => prev - 1);
+        setIsLiked(false);
       }
-    } catch (error) {
-      console.log(error);
     }
   };
+
+  const handleDownload = async () => {
+    if (!user) {
+      toast.error("Please sign in to download videos.");
+      return;
+    }
+    setIsDownloading(true);
+    try {
+      const { data } = await axiosInstance.post("/payment/download", {
+        videoId: video._id,
+        videoTitle: video.videotitle,
+      });
+
+      if (data.user) updateUser(data.user);
+
+      const a = document.createElement("a");
+      a.href = getVideoUrl(video.filepath);
+      a.download = video.videotitle || video.filename || "video.mp4";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success("Download started!");
+    } catch (error: any) {
+      if (error.response?.status === 403 && error.response?.data?.limitReached) {
+        toast.error(
+          "Daily download limit reached. Upgrade for unlimited downloads!",
+          {
+            action: {
+              label: "Upgrade",
+              onClick: () => router.push("/upgrade"),
+            },
+            duration: 6000,
+          }
+        );
+      } else {
+        toast.error("Download failed. Please try again.");
+      }
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">{video.videotitle}</h1>
@@ -179,9 +214,11 @@ const VideoInfo = ({ video }: any) => {
             variant="ghost"
             size="sm"
             className="bg-gray-100 rounded-full"
+            onClick={handleDownload}
+            disabled={isDownloading}
           >
             <Download className="w-5 h-5 mr-2" />
-            Download
+            {isDownloading ? "Downloading..." : "Download"}
           </Button>
           <Button
             variant="ghost"
@@ -192,6 +229,7 @@ const VideoInfo = ({ video }: any) => {
           </Button>
         </div>
       </div>
+
       <div className="bg-gray-100 rounded-lg p-4">
         <div className="flex gap-4 text-sm font-medium mb-2">
           <span>{video.views.toLocaleString()} views</span>

@@ -1,15 +1,23 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "./ui/button";
-const tabs = [
-  { id: "home", label: "Home" },
+
+const baseTabs = [
   { id: "videos", label: "Videos" },
-  { id: "shorts", label: "Shorts" },
-  { id: "playlists", label: "Playlists" },
-  { id: "community", label: "Community" },
-  { id: "about", label: "About" },
 ];
-const Channeltabs = () => {
-  const [activeTab, setActiveTab] = useState("videos");
+
+const ownerOnlyTabs = [
+  { id: "downloads", label: "Downloads" },
+];
+
+interface ChanneltabsProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  isOwner?: boolean;
+}
+
+const Channeltabs = ({ activeTab, setActiveTab, isOwner }: ChanneltabsProps) => {
+  const tabs = isOwner ? [...baseTabs, ...ownerOnlyTabs] : baseTabs;
+
   return (
     <div className="border-b px-4">
       <div className="flex gap-8 overflow-x-auto">
