@@ -3,9 +3,16 @@ import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
 import Videoplayer from "@/components/videoplayer";
 import axiosInstance from "@/lib/axiosinstance";
-import { notFound } from "next/navigation";
+import { useUser } from "@/lib/AuthContext";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+
+const watchLimits: any = {
+  free: 5 * 60, // 5 minutes in seconds
+  bronze: 7 * 60, // 7 minutes
+  silver: 10 * 60, // 10 minutes
+  gold: Infinity, // unlimited
+};
 
 const index = () => {
   const router = useRouter();
@@ -13,6 +20,10 @@ const index = () => {
   const [videos, setvideo] = useState<any>(null);
   const [video, setvide] = useState<any>(null);
   const [loading, setloading] = useState(true);
+  const { user } = useUser();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const limitReached = useRef(false); // prevent multiple alerts
+
   useEffect(() => {
     const fetchvideo = async () => {
       if (!id || typeof id !== "string") return;
@@ -29,36 +40,32 @@ const index = () => {
     };
     fetchvideo();
   }, [id]);
-  // const relatedVideos = [
-  //   {
-  //     _id: "1",
-  //     videotitle: "Amazing Nature Documentary",
-  //     filename: "nature-doc.mp4",
-  //     filetype: "video/mp4",
-  //     filepath: "/videos/nature-doc.mp4",
-  //     filesize: "500MB",
-  //     videochanel: "Nature Channel",
-  //     Like: 1250,
-  //     Dislike: 50,
-  //     views: 45000,
-  //     uploader: "nature_lover",
-  //     createdAt: new Date().toISOString(),
-  //   },
-  //   {
-  //     _id: "2",
-  //     videotitle: "Cooking Tutorial: Perfect Pasta",
-  //     filename: "pasta-tutorial.mp4",
-  //     filetype: "video/mp4",
-  //     filepath: "/videos/pasta-tutorial.mp4",
-  //     filesize: "300MB",
-  //     videochanel: "Chef's Kitchen",
-  //     Like: 890,
-  //     Dislike: 20,
-  //     views: 23000,
-  //     uploader: "chef_master",
-  //     createdAt: new Date(Date.now() - 86400000).toISOString(),
-  //   },
-  // ];
+
+  // Watch time limiter
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl || !user) return;
+
+    limitReached.current = false; // reset on new video
+
+    const plan = user.plan || "free";
+    const limit = watchLimits[plan];
+
+    const handleTimeUpdate = () => {
+      if (!limitReached.current && videoEl.currentTime >= limit) {
+        limitReached.current = true;
+        videoEl.pause();
+        const upgrade = confirm(
+          `⏱ Your ${plan.toUpperCase()} plan allows only ${limit / 60} minutes of watching.\n\nClick OK to upgrade your plan!`,
+        );
+        if (upgrade) router.push("/upgrade");
+      }
+    };
+
+    videoEl.addEventListener("timeupdate", handleTimeUpdate);
+    return () => videoEl.removeEventListener("timeupdate", handleTimeUpdate);
+  }, [user, videos]);
+
   if (loading) {
     return <div>Loading..</div>;
   }
@@ -66,12 +73,13 @@ const index = () => {
   if (!videos) {
     return <div>Video not found</div>;
   }
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
-            <Videoplayer video={videos} />
+            <Videoplayer video={videos} videoRef={videoRef} />
             <VideoInfo video={videos} />
             <Comments videoId={id} />
           </div>
