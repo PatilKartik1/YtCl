@@ -2,11 +2,16 @@ import mongoose from "mongoose";
 
 const userschema = mongoose.Schema({
   email: { type: String, required: true },
+  mobile: { type: String },
   name: { type: String },
   channelname: { type: String },
   description: { type: String },
   image: { type: String },
   city: { type: String, default: "" },
+  state: {
+    type: String,
+    default: "",
+  },
   joinedon: { type: Date, default: Date.now },
 
   // Plan fields

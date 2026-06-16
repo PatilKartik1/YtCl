@@ -89,7 +89,11 @@ export default function Upgrade() {
               error?.response?.data?.message ||
               error?.message ||
               "Unknown error";
-            console.error("Payment verify failed:", error?.response?.status, msg);
+            console.error(
+              "Payment verify failed:",
+              error?.response?.status,
+              msg,
+            );
             toast.error(`Payment verification failed: ${msg}`);
           } finally {
             setLoading(null);
@@ -118,7 +122,7 @@ export default function Upgrade() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-8">
+    <div className="min-h-screen bg-background p-8">
       <h1 className="text-3xl font-bold text-center mb-2">Upgrade Your Plan</h1>
       <p className="text-center text-gray-500 mb-8">
         Current Plan:{" "}

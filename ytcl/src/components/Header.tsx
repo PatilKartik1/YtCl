@@ -14,17 +14,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Channeldialogue from "./channeldialogue";
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
+import OTPLoginModal from "./OTPLoginModal";
 
 const Header = () => {
-  const { user, logout, handlegooglesignin } = useUser();
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
+  const { user, logout } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [isdialogeopen, setisdialogeopen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const router = useRouter();
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +34,7 @@ const Header = () => {
     }
   };
   return (
-    <header className="flex items-center justify-between px-4 py-2 bg-white border-b">
+    <header className="flex items-center justify-between px-4 py-2 bg-background border-b">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon">
           <Menu className="w-6 h-6" />
@@ -50,7 +46,7 @@ const Header = () => {
             </svg>
           </div>
           <span className="text-xl font-medium">YtCl</span>
-          <span className="text-xs text-gray-400 ml-1">IN</span>
+          <span className="text-xs text-muted-foreground ml-1">IN</span>
         </Link>
       </div>
       <form
@@ -68,7 +64,7 @@ const Header = () => {
           />
           <Button
             type="submit"
-            className="rounded-r-full px-6 bg-gray-50 hover:bg-gray-100 text-gray-600 border border-l-0"
+            className="rounded-r-full px-6 bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-l-0"
           >
             <Search className="w-5 h-5" />
           </Button>
@@ -151,7 +147,7 @@ const Header = () => {
           <>
             <Button
               className="flex items-center gap-2"
-              onClick={handlegooglesignin}
+              onClick={() => setIsLoginModalOpen(true)}
             >
               <User className="w-4 h-4" />
               Sign in
@@ -163,6 +159,10 @@ const Header = () => {
         isopen={isdialogeopen}
         onclose={() => setisdialogeopen(false)}
         mode="create"
+      />
+      <OTPLoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
       />
     </header>
   );

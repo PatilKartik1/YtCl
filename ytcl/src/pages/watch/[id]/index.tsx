@@ -76,13 +76,37 @@ const index = () => {
 
   const currentPlan = user?.plan || "free";
 
+  const handleNextVideo = () => {
+    if (!video || !id) return;
+    const others = video.filter((v: any) => v._id !== id);
+    if (others.length > 0) {
+      router.push(`/watch/${others[0]._id}`);
+    }
+  };
+
+  const handleOpenComments = () => {
+    document
+      .getElementById("comments-section")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleClose = () => {
+    router.push("/");
+  };
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <div className="relative">
-              <Videoplayer video={videos} videoRef={videoRef} />
+              <Videoplayer
+                video={videos}
+                videoRef={videoRef}
+                onNextVideo={handleNextVideo}
+                onOpenComments={handleOpenComments}
+                onClose={handleClose}
+              />
               {limitHit && (
                 <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-lg text-white p-6 text-center">
                   <Crown className="w-10 h-10 mb-3 text-yellow-400" />
@@ -102,7 +126,7 @@ const index = () => {
               )}
             </div>
             <VideoInfo video={videos} />
-            <Comments videoId={id} />
+            <Comments videoId={id} id="comments-section" />
           </div>
           <div className="space-y-4">
             <RelatedVideos videos={video} />

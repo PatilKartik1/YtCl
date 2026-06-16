@@ -3,19 +3,50 @@ import Sidebar from "@/components/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import { UserProvider } from "../lib/AuthContext";
+import { UserProvider, useUser } from "../lib/AuthContext";
+import { ThemeProvider, useTheme } from "next-themes";
+import { useEffect } from "react";
+
+const ThemeManager = ({ children }: { children: React.ReactNode }) => {
+  const { setTheme } = useTheme();
+  const { isSouthIndia } = useUser();
+
+  useEffect(() => {
+    const now = new Date();
+    // Get time in IST
+    const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false } as const;
+    const istHourStr = now.toLocaleTimeString('en-US', options);
+    const hour = parseInt(istHourStr, 10);
+    
+    // 10:00 AM to 12:00 PM -> hour 10 and 11
+    const isTimeMatch = hour >= 10 && hour < 12;
+
+    if (isSouthIndia && isTimeMatch) {
+      setTheme("light");
+    } else {
+      setTheme("dark");
+    }
+  }, [isSouthIndia, setTheme]);
+
+  return <>{children}</>;
+};
+
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <UserProvider>
-      <div className="min-h-screen bg-white text-black">
-        <title>YtCl</title>
-        <Header />
-        <Toaster />
-        <div className="flex">
-          <Sidebar />
-          <Component {...pageProps} />
-        </div>
-      </div>
-    </UserProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <UserProvider>
+        <ThemeManager>
+          <div className="min-h-screen bg-background text-foreground">
+            <title>YtCl</title>
+            <Header />
+            <Toaster />
+            <div className="flex">
+              <Sidebar />
+              <Component {...pageProps} />
+            </div>
+          </div>
+        </ThemeManager>
+      </UserProvider>
+    </ThemeProvider>
   );
 }

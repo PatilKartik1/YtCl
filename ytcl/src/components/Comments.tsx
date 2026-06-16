@@ -18,7 +18,7 @@ interface Comment {
   dislikes: string[];
 }
 
-const Comments = ({ videoId }: any) => {
+const Comments = ({ videoId, id }: { videoId: any; id?: string }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -216,7 +216,7 @@ const Comments = ({ videoId }: any) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div id={id} className="space-y-6 scroll-mt-24">
       <h2 className="text-xl font-semibold">{comments.length} Comments</h2>
 
       {user && (
