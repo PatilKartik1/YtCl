@@ -30,7 +30,7 @@ export default function LikedVideosContent() {
     if (!user) return;
 
     try {
-      const likedData = await axiosInstance.get(`/like/${user?._id}`);
+      const likedData = await axiosInstance.get("/like");
 
       setLikedVideos(likedData.data);
     } catch (error) {

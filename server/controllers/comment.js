@@ -12,7 +12,7 @@ export const postcomment = async (req, res) => {
     });
   }
 
-  const commentdata = req.body;
+  const commentdata = { ...req.body, userid: req.userId };
   const postcomment = new comment(commentdata);
   try {
     await postcomment.save();
@@ -34,10 +34,18 @@ export const getallcomment = async (req, res) => {
 };
 export const deletecomment = async (req, res) => {
   const { id: _id } = req.params;
+  const userId = req.userId;
   if (!mongoose.Types.ObjectId.isValid(_id)) {
     return res.status(404).send("comment unavailable");
   }
   try {
+    const existingComment = await comment.findById(_id);
+    if (!existingComment) {
+      return res.status(404).send("comment unavailable");
+    }
+    if (existingComment.userid.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Forbidden: You cannot delete this comment" });
+    }
     await comment.findByIdAndDelete(_id);
     return res.status(200).json({ comment: true });
   } catch (error) {
@@ -49,13 +57,21 @@ export const deletecomment = async (req, res) => {
 export const editcomment = async (req, res) => {
   const { id: _id } = req.params;
   const { commentbody } = req.body;
+  const userId = req.userId;
   if (!mongoose.Types.ObjectId.isValid(_id)) {
     return res.status(404).send("comment unavailable");
   }
   try {
+    const existingComment = await comment.findById(_id);
+    if (!existingComment) {
+      return res.status(404).send("comment unavailable");
+    }
+    if (existingComment.userid.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Forbidden: You cannot edit this comment" });
+    }
     const updatecomment = await comment.findByIdAndUpdate(_id, {
       $set: { commentbody: commentbody },
-    });
+    }, { new: true });
     res.status(200).json(updatecomment);
   } catch (error) {
     console.error(" error:", error);
@@ -65,7 +81,7 @@ export const editcomment = async (req, res) => {
 
 export const likecomment = async (req, res) => {
   const { id } = req.params;
-  const { userid } = req.body;
+  const userid = req.userId;
 
   try {
     const commentdata = await comment.findById(id);
@@ -74,15 +90,19 @@ export const likecomment = async (req, res) => {
       return res.status(404).json({ message: "Comment not found" });
     }
 
+    // Initialize arrays if they don't exist (schema migration fallback)
+    if (!commentdata.likes) commentdata.likes = [];
+    if (!commentdata.dislikes) commentdata.dislikes = [];
+
     // Convert ObjectId array to strings for safe comparison
     const alreadyLiked = commentdata.likes.some(
-      (like) => like.toString() === userid.toString(),
+      (like) => like && like.toString() === userid.toString(),
     );
 
     if (alreadyLiked) {
       // Remove the like using filter
       commentdata.likes = commentdata.likes.filter(
-        (like) => like.toString() !== userid.toString(),
+        (like) => like && like.toString() !== userid.toString(),
       );
     } else {
       // Add the like — mongoose will auto-convert string to ObjectId
@@ -99,7 +119,7 @@ export const likecomment = async (req, res) => {
 
 export const dislikecomment = async (req, res) => {
   const { id } = req.params;
-  const { userid } = req.body;
+  const userid = req.userId;
 
   try {
     const commentdata = await comment.findById(id);
@@ -108,15 +128,19 @@ export const dislikecomment = async (req, res) => {
       return res.status(404).json({ message: "Comment not found" });
     }
 
+    // Initialize arrays if they don't exist (schema migration fallback)
+    if (!commentdata.likes) commentdata.likes = [];
+    if (!commentdata.dislikes) commentdata.dislikes = [];
+
     // Toggle dislike
     const alreadyDisliked = commentdata.dislikes.some(
-      (dislike) => dislike.toString() === userid.toString(),
+      (dislike) => dislike && dislike.toString() === userid.toString(),
     );
 
     if (alreadyDisliked) {
       // Remove dislike
       commentdata.dislikes = commentdata.dislikes.filter(
-        (dislike) => dislike.toString() !== userid.toString(),
+        (dislike) => dislike && dislike.toString() !== userid.toString(),
       );
     } else {
       // Add dislike

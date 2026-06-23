@@ -2,7 +2,7 @@ import video from "../Modals/video.js";
 import history from "../Modals/history.js";
 
 export const handlehistory = async (req, res) => {
-  const { userId } = req.body;
+  const userId = req.userId;
   const { videoId } = req.params;
   try {
     await history.create({ viewer: userId, videoid: videoId });
@@ -24,7 +24,7 @@ export const handleview = async (req, res) => {
   }
 };
 export const getallhistoryVideo = async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.userId;
   try {
     const historyvideo = await history
       .find({ viewer: userId })

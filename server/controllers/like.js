@@ -2,7 +2,7 @@ import video from "../Modals/video.js";
 import like from "../Modals/like.js";
 
 export const handlelike = async (req, res) => {
-  const { userId } = req.body;
+  const userId = req.userId;
   const { videoId } = req.params;
   try {
     const exisitinglike = await like.findOne({
@@ -25,7 +25,7 @@ export const handlelike = async (req, res) => {
 };
 
 export const getallLikedVideo = async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.userId;
   try {
     const likevideo = await like
       .find({ viewer: userId })

@@ -30,7 +30,7 @@ export default function WatchLaterContent() {
     if (!user) return;
 
     try {
-      const watchLaterData = await axiosInstance.get(`/watch/${user?._id}`);
+      const watchLaterData = await axiosInstance.get("/watch");
 
       setWatchLater(watchLaterData.data);
     } catch (error) {

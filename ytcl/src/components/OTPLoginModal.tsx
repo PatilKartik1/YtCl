@@ -29,8 +29,8 @@ const OTPLoginModal: React.FC<OTPLoginModalProps> = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       const response = await axiosInstance.post("/user/send-otp", {
-        email: identifier,
-        mobile: identifier,
+        email: isSouthIndia ? identifier : undefined,
+        mobile: !isSouthIndia ? identifier : undefined,
         isSouthIndia,
       });
       const testOtp = response.data?.otp;

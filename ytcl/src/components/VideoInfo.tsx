@@ -38,9 +38,7 @@ const VideoInfo = ({ video }: any) => {
     const handleviews = async () => {
       if (user) {
         try {
-          return await axiosInstance.post(`/history/${video._id}`, {
-            userId: user?._id,
-          });
+          return await axiosInstance.post(`/history/${video._id}`);
         } catch (error) {
           return console.log(error);
         }
@@ -54,9 +52,7 @@ const VideoInfo = ({ video }: any) => {
   const handleLike = async () => {
     if (!user) return;
     try {
-      const res = await axiosInstance.post(`/like/${video._id}`, {
-        userId: user?._id,
-      });
+      const res = await axiosInstance.post(`/like/${video._id}`);
       if (res.data.liked) {
         if (isLiked) {
           setlikes((prev: any) => prev - 1);
@@ -77,9 +73,7 @@ const VideoInfo = ({ video }: any) => {
 
   const handleWatchLater = async () => {
     try {
-      const res = await axiosInstance.post(`/watch/${video._id}`, {
-        userId: user?._id,
-      });
+      const res = await axiosInstance.post(`/watch/${video._id}`);
       if (res.data.watchlater) {
         setIsWatchLater(!isWatchLater);
       } else {

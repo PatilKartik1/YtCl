@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { toast } from "sonner";
 
 interface Comment {
   _id: string;
@@ -72,7 +73,6 @@ const Comments = ({ videoId, id }: { videoId: any; id?: string }) => {
     try {
       const res = await axiosInstance.post("/comment/postcomment", {
         videoid: videoId,
-        userid: user._id,
         commentbody: newComment,
         usercommented: user.name,
         city: user.city,
@@ -142,11 +142,12 @@ const Comments = ({ videoId, id }: { videoId: any; id?: string }) => {
   };
 
   const handleLike = async (commentId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Please sign in to like comments");
+      return;
+    }
     try {
-      const response = await axiosInstance.patch(`/comment/like/${commentId}`, {
-        userid: user?._id,
-      });
+      const response = await axiosInstance.patch(`/comment/like/${commentId}`);
       setComments((prev) =>
         prev.map((c) =>
           c._id === commentId ? { ...c, likes: response.data.likes } : c,
@@ -158,11 +159,13 @@ const Comments = ({ videoId, id }: { videoId: any; id?: string }) => {
   };
 
   const handleDislike = async (commentId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Please sign in to dislike comments");
+      return;
+    }
     try {
       const response = await axiosInstance.patch(
-        `/comment/dislike/${commentId}`,
-        { userid: user?._id },
+        `/comment/dislike/${commentId}`
       );
       if (response.data.deleted) {
         // Auto-removed due to 2 dislikes
@@ -191,7 +194,7 @@ const Comments = ({ videoId, id }: { videoId: any; id?: string }) => {
     setShowLangPicker(null);
     try {
       const res = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair= autodetect|${targetLang}`,
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=autodetect|${targetLang}`,
       );
       const data = await res.json();
       const translated = data.responseData.translatedText;

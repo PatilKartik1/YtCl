@@ -32,7 +32,7 @@ export default function HistoryContent() {
     if (!user) return;
 
     try {
-      const historyData = await axiosInstance.get(`/history/${user?._id}`);
+      const historyData = await axiosInstance.get("/history");
       setHistory(historyData.data);
     } catch (error) {
       console.error("Error loading history:", error);

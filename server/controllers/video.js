@@ -1,6 +1,7 @@
 import video from "../Modals/video.js";
 import ffmpeg from "fluent-ffmpeg";
 import ffprobeStatic from "ffprobe-static";
+import fs from "fs";
 
 ffmpeg.setFfprobePath(ffprobeStatic.path);
 
@@ -37,6 +38,11 @@ export const uploadvideo = async (req, res) => {
     return res.status(201).json("file uploaded successfully");
   } catch (error) {
     console.error("error:", error);
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error("Failed to delete orphaned upload file:", err);
+      });
+    }
     return res.status(500).json({ message: "Something went wrong" });
   }
 };

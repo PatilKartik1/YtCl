@@ -1,7 +1,7 @@
 import watchlater from "../Modals/watchlater.js";
 
 export const handlewatchlater = async (req, res) => {
-  const { userId } = req.body;
+  const userId = req.userId;
   const { videoId } = req.params;
   try {
     const exisitingwatchlater = await watchlater.findOne({
@@ -22,7 +22,7 @@ export const handlewatchlater = async (req, res) => {
 };
 
 export const getallwatchlater = async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.userId;
   try {
     const watchlatervideo = await watchlater
       .find({ viewer: userId })

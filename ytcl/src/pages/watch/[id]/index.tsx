@@ -54,17 +54,36 @@ const index = () => {
 
     if (!isFinite(limit)) return;
 
+    const storageKey = `limitHit_${id}_${plan}`;
+    if (localStorage.getItem(storageKey) === "true") {
+      limitReached.current = true;
+      setLimitHit(true);
+      videoEl.pause();
+    }
+
     const handleTimeUpdate = () => {
-      if (!limitReached.current && videoEl.currentTime >= limit) {
+      if (limitReached.current || videoEl.currentTime >= limit) {
         limitReached.current = true;
         videoEl.pause();
         setLimitHit(true);
+        localStorage.setItem(storageKey, "true");
+      }
+    };
+
+    const handlePlay = () => {
+      if (limitReached.current) {
+        videoEl.pause();
       }
     };
 
     videoEl.addEventListener("timeupdate", handleTimeUpdate);
-    return () => videoEl.removeEventListener("timeupdate", handleTimeUpdate);
-  }, [user, videos]);
+    videoEl.addEventListener("play", handlePlay);
+
+    return () => {
+      videoEl.removeEventListener("timeupdate", handleTimeUpdate);
+      videoEl.removeEventListener("play", handlePlay);
+    };
+  }, [user, videos, id]);
 
   if (loading) {
     return <div>Loading..</div>;

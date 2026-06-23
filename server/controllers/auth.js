@@ -105,9 +105,9 @@ export const verifyOtp = async (req, res) => {
     if (!existingUser) {
       console.log("Creating new user...");
       existingUser = await users.create({ 
-        email: email || `${mobile}@placeholder.com`, // fallback if only mobile provided
+        email: email && email.includes("@") ? email : `${mobile}@placeholder.com`, // fallback if only mobile provided
         mobile, 
-        name: name || (email ? email.split('@')[0] : "User"), 
+        name: name || (email && email.includes("@") ? email.split('@')[0] : "User"), 
         image: image || "https://github.com/shadcn.png" 
       });
       console.log("User created:", existingUser._id);
@@ -149,6 +149,9 @@ export const updateprofile = async (req, res) => {
   const { channelname, description, city } = req.body;
   if (!mongoose.Types.ObjectId.isValid(_id)) {
     return res.status(500).json({ message: "User unavailable..." });
+  }
+  if (_id.toString() !== req.userId.toString()) {
+    return res.status(403).json({ message: "Forbidden: You cannot update another user's profile" });
   }
   try {
     const updatedata = await users.findByIdAndUpdate(

@@ -6,6 +6,6 @@ import {
 import authMiddleware from "../middleware/auth.js";
 
 const routes = express.Router();
-routes.get("/:userId", authMiddleware, getallwatchlater);
+routes.get("/", authMiddleware, getallwatchlater);
 routes.post("/:videoId", authMiddleware, handlewatchlater);
 export default routes;
