@@ -129,7 +129,6 @@ export default function Upgrade() {
         <span className="font-semibold capitalize">{user?.plan || "Free"}</span>
       </p>
 
-      {/* Free Plan */}
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="border rounded-xl p-6 space-y-3 opacity-60">
           <div className="w-full h-2 rounded bg-gray-200" />
@@ -147,7 +146,6 @@ export default function Upgrade() {
           </button>
         </div>
 
-        {/* Paid Plans */}
         {plans.map((plan) => (
           <div
             key={plan.id}

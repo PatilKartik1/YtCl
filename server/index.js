@@ -18,7 +18,7 @@ const app = express();
 import path from "path";
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow any origin or localhost
+    
     callback(null, true);
   },
   credentials: true,

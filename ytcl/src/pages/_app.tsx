@@ -13,12 +13,12 @@ const ThemeManager = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const now = new Date();
-    // Get time in IST
+    
     const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false } as const;
     const istHourStr = now.toLocaleTimeString('en-US', options);
     const hour = parseInt(istHourStr, 10);
     
-    // 10:00 AM to 12:00 PM -> hour 10 and 11
+    
     const isTimeMatch = hour >= 10 && hour < 12;
 
     if (isSouthIndia && isTimeMatch) {

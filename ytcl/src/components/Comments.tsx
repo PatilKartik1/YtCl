@@ -168,10 +168,10 @@ const Comments = ({ videoId, id }: { videoId: any; id?: string }) => {
         `/comment/dislike/${commentId}`
       );
       if (response.data.deleted) {
-        // Auto-removed due to 2 dislikes
+        
         setComments((prev) => prev.filter((c) => c._id !== commentId));
       } else {
-        // Update dislikes in state
+        
         setComments((prev) =>
           prev.map((c) =>
             c._id === commentId
@@ -307,12 +307,12 @@ const Comments = ({ videoId, id }: { videoId: any; id?: string }) => {
                   </div>
                 ) : (
                   <>
-                    {/* Comment body — shows translated or original */}
+                    {}
                     <p className="text-sm">
                       {translatedComments[comment._id] || comment.commentbody}
                     </p>
 
-                    {/* Translate controls */}
+                    {}
                     <div className="relative mt-1">
                       {translatedComments[comment._id] ? (
                         <button
@@ -338,7 +338,7 @@ const Comments = ({ videoId, id }: { videoId: any; id?: string }) => {
                         </button>
                       )}
 
-                      {/* Language picker dropdown */}
+                      {}
                       {showLangPicker === comment._id && (
                         <div className="absolute z-10 mt-1 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg p-2 grid grid-cols-2 gap-1 w-48">
                           {languages.map((lang) => (

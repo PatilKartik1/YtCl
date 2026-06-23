@@ -8,11 +8,11 @@ import twilio from "twilio";
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// In-memory OTP store for simplicity. (Use Redis in production)
+
 const otpStore = new Map();
 
-// Transporter and Twilio client will be initialized lazily inside sendOtp
-// to ensure process.env is fully loaded.
+
+
 
 export const sendOtp = async (req, res) => {
   const { email, mobile, isSouthIndia } = req.body;
@@ -23,12 +23,12 @@ export const sendOtp = async (req, res) => {
     return res.status(400).json({ message: "Identifier (email/mobile) is required." });
   }
 
-  // Store OTP with an expiry of 5 minutes
+  
   otpStore.set(identifier, { otp, expiresAt: Date.now() + 5 * 60 * 1000, email, mobile });
 
   try {
     if (isSouthIndia) {
-      // Send OTP via Email
+      
       console.log(`[OTP EMAIL] Sending OTP ${otp} to email: ${email}`);
       if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         const transporter = nodemailer.createTransport({
@@ -48,7 +48,7 @@ export const sendOtp = async (req, res) => {
         console.warn("EMAIL_USER or EMAIL_PASS not set in .env. Skipping actual email send.");
       }
     } else {
-      // Send OTP via Mobile
+      
       console.log(`[OTP SMS] Sending OTP ${otp} to mobile: ${mobile}`);
       if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER) {
         const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
@@ -95,7 +95,7 @@ export const verifyOtp = async (req, res) => {
     return res.status(400).json({ message: "OTP expired" });
   }
 
-  // OTP is valid. Create or login user.
+  
   const { email, mobile } = storedData;
   console.log("OTP valid, creating/fetching user for:", email || mobile);
   try {
@@ -105,7 +105,7 @@ export const verifyOtp = async (req, res) => {
     if (!existingUser) {
       console.log("Creating new user...");
       existingUser = await users.create({ 
-        email: email && email.includes("@") ? email : `${mobile}@placeholder.com`, // fallback if only mobile provided
+        email: email && email.includes("@") ? email : `${mobile}@placeholder.com`, 
         mobile, 
         name: name || (email && email.includes("@") ? email.split('@')[0] : "User"), 
         image: image || "https://github.com/shadcn.png" 
@@ -116,7 +116,7 @@ export const verifyOtp = async (req, res) => {
     }
 
     const token = signToken(existingUser._id);
-    otpStore.delete(identifier); // Clear OTP after success
+    otpStore.delete(identifier); 
     console.log("Returning success response");
     return res.status(200).json({ result: existingUser, token });
   } catch (error) {

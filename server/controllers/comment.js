@@ -90,22 +90,22 @@ export const likecomment = async (req, res) => {
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    // Initialize arrays if they don't exist (schema migration fallback)
+    
     if (!commentdata.likes) commentdata.likes = [];
     if (!commentdata.dislikes) commentdata.dislikes = [];
 
-    // Convert ObjectId array to strings for safe comparison
+    
     const alreadyLiked = commentdata.likes.some(
       (like) => like && like.toString() === userid.toString(),
     );
 
     if (alreadyLiked) {
-      // Remove the like using filter
+      
       commentdata.likes = commentdata.likes.filter(
         (like) => like && like.toString() !== userid.toString(),
       );
     } else {
-      // Add the like — mongoose will auto-convert string to ObjectId
+      
       commentdata.likes.push(new mongoose.Types.ObjectId(userid));
     }
 
@@ -128,25 +128,25 @@ export const dislikecomment = async (req, res) => {
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    // Initialize arrays if they don't exist (schema migration fallback)
+    
     if (!commentdata.likes) commentdata.likes = [];
     if (!commentdata.dislikes) commentdata.dislikes = [];
 
-    // Toggle dislike
+    
     const alreadyDisliked = commentdata.dislikes.some(
       (dislike) => dislike && dislike.toString() === userid.toString(),
     );
 
     if (alreadyDisliked) {
-      // Remove dislike
+      
       commentdata.dislikes = commentdata.dislikes.filter(
         (dislike) => dislike && dislike.toString() !== userid.toString(),
       );
     } else {
-      // Add dislike
+      
       commentdata.dislikes.push(new mongoose.Types.ObjectId(userid));
 
-      // Auto-remove comment if dislikes reach 2
+      
       if (commentdata.dislikes.length >= 2) {
         await comment.findByIdAndDelete(id);
         return res.status(200).json({ deleted: true });

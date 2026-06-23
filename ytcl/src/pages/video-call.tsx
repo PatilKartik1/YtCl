@@ -37,13 +37,13 @@ export default function VideoCallPage() {
   const { user } = useUser();
   const router = useRouter();
 
-  // Peer & Socket states
+  
   const [socket, setSocket] = useState<Socket | null>(null);
   const [usersList, setUsersList] = useState<UserType[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Call states
+  
   const [activeCall, setActiveCall] = useState<boolean>(false);
   const [callingUser, setCallingUser] = useState<UserType | null>(null);
   const [incomingCall, setIncomingCall] = useState<{
@@ -54,37 +54,37 @@ export default function VideoCallPage() {
   } | null>(null);
   const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
 
-  // Stream toggles
+  
   const [micEnabled, setMicEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [screenSharing, setScreenSharing] = useState(false);
 
-  // Recording state
+  
   const [isRecording, setIsRecording] = useState(false);
 
-  // Synchronized YouTube states
+  
   const [ytUrl, setYtUrl] = useState("");
   const [currentYtVideoId, setCurrentYtVideoId] = useState("");
   const [ytPlayerReady, setYtPlayerReady] = useState(false);
 
-  // Stream & Connection Refs
+  
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const socketRef = useRef<Socket | null>(null);
-  const callingUserIdRef = useRef<string | null>(null); // who we are currently calling or in a call with
+  const callingUserIdRef = useRef<string | null>(null); 
 
-  // UI Video Refs
+  
   const localVideoElementRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoElementRef = useRef<HTMLVideoElement | null>(null);
   const ytPlayerContainerRef = useRef<HTMLDivElement | null>(null);
   const ytPlayerRef = useRef<any>(null);
 
-  // Recorder Ref
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
-  // Redirect if not logged in
+  
   useEffect(() => {
     if (user === undefined) return;
     if (user === null) {
@@ -92,13 +92,13 @@ export default function VideoCallPage() {
     }
   }, [user]);
 
-  // Load Registered Users
+  
   useEffect(() => {
     if (!user) return;
     const fetchUsers = async () => {
       try {
         const response = await axiosInstance.get("/user/users");
-        // Exclude current user from the list
+        
         const filtered = response.data.filter((u: UserType) => u._id !== user._id && u.email !== user.email);
         setUsersList(filtered);
       } catch (error) {
@@ -108,7 +108,7 @@ export default function VideoCallPage() {
     fetchUsers();
   }, [user]);
 
-  // Socket Connection & Listeners
+  
   useEffect(() => {
     if (!user) return;
 
@@ -117,18 +117,18 @@ export default function VideoCallPage() {
     setSocket(socketInstance);
     socketRef.current = socketInstance;
 
-    // Register user
+    
     socketInstance.emit("register", user._id);
 
-    // Watch for online users changes
+    
     socketInstance.on("user-status-change", (userIds: string[]) => {
       setOnlineUsers(userIds);
     });
 
-    // Handle Incoming Call
+    
     socketInstance.on("incoming-call", ({ from, offer, callerName, callerImage }) => {
       if (activeCall || incomingCall) {
-        // Busy - we can send a disconnect/decline event back to simplify
+        
         socketInstance.emit("end-call", { to: from });
         return;
       }
@@ -136,7 +136,7 @@ export default function VideoCallPage() {
       callingUserIdRef.current = from;
     });
 
-    // Handle Call Answered
+    
     socketInstance.on("call-answered", async ({ answer }) => {
       if (peerConnectionRef.current) {
         try {
@@ -149,7 +149,7 @@ export default function VideoCallPage() {
       }
     });
 
-    // Handle ICE Candidate
+    
     socketInstance.on("ice-candidate", async ({ candidate }) => {
       if (peerConnectionRef.current) {
         try {
@@ -160,7 +160,7 @@ export default function VideoCallPage() {
       }
     });
 
-    // Handle Call Ended
+    
     socketInstance.on("call-ended", () => {
       handleEndCallLocal(false);
       toast.info("Call ended by remote user");
@@ -171,7 +171,7 @@ export default function VideoCallPage() {
       cleanupCallState();
     });
 
-    // Handle YouTube Synchronized Actions
+    
     socketInstance.on("yt-video-action", ({ action, videoId, time }) => {
       if (videoId && currentYtVideoId !== videoId) {
         setCurrentYtVideoId(videoId);
@@ -194,7 +194,7 @@ export default function VideoCallPage() {
     };
   }, [user, activeCall, incomingCall, currentYtVideoId]);
 
-  // Load YouTube Player API
+  
   useEffect(() => {
     if (!activeCall) return;
 
@@ -234,12 +234,12 @@ export default function VideoCallPage() {
             setYtPlayerReady(true);
           },
           onStateChange: (event: any) => {
-            // YT.PlayerState: -1 = unstarted, 0 = ended, 1 = playing, 2 = paused, 3 = buffering, 5 = video cued
+            
             const state = event.data;
             if (!socketRef.current || !callingUserIdRef.current) return;
 
             if (state === 1) {
-              // Playing
+              
               const currentTime = ytPlayerRef.current.getCurrentTime();
               socketRef.current.emit("yt-video-action", {
                 to: callingUserIdRef.current,
@@ -247,7 +247,7 @@ export default function VideoCallPage() {
                 time: currentTime,
               });
             } else if (state === 2) {
-              // Paused
+              
               const currentTime = ytPlayerRef.current.getCurrentTime();
               socketRef.current.emit("yt-video-action", {
                 to: callingUserIdRef.current,
@@ -263,11 +263,11 @@ export default function VideoCallPage() {
     }
   };
 
-  // Synchronized YouTube Video Control
+  
   const loadYoutubeVideo = () => {
     if (!ytUrl) return;
     let videoId = "";
-    // Parse video ID from standard or share URLs
+    
     if (ytUrl.includes("v=")) {
       videoId = ytUrl.split("v=")[1]?.split("&")[0];
     } else if (ytUrl.includes("youtu.be/")) {
@@ -306,7 +306,7 @@ export default function VideoCallPage() {
     }
   };
 
-  // Setup local WebRTC media stream
+  
   const setupLocalMedia = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -324,7 +324,7 @@ export default function VideoCallPage() {
     }
   };
 
-  // Create Peer Connection
+  
   const createPeerConnection = (recipientId: string, localStream: MediaStream) => {
     const pc = new RTCPeerConnection({
       iceServers: [
@@ -334,12 +334,12 @@ export default function VideoCallPage() {
       ],
     });
 
-    // Add local tracks
+    
     localStream.getTracks().forEach((track) => {
       pc.addTrack(track, localStream);
     });
 
-    // Handle incoming remote tracks
+    
     pc.ontrack = (event) => {
       const remoteStream = event.streams[0];
       remoteStreamRef.current = remoteStream;
@@ -348,7 +348,7 @@ export default function VideoCallPage() {
       }
     };
 
-    // Handle ICE candidates
+    
     pc.onicecandidate = (event) => {
       if (event.candidate && socketRef.current) {
         socketRef.current.emit("ice-candidate", {
@@ -363,7 +363,7 @@ export default function VideoCallPage() {
     return pc;
   };
 
-  // Start Call (Call Initiator)
+  
   const handleInitiateCall = async (recipient: UserType) => {
     setCallingUser(recipient);
     callingUserIdRef.current = recipient._id;
@@ -390,7 +390,7 @@ export default function VideoCallPage() {
     }
   };
 
-  // Accept Incoming Call
+  
   const handleAcceptCall = async () => {
     if (!incomingCall) return;
     const callerId = incomingCall.from;
@@ -423,7 +423,7 @@ export default function VideoCallPage() {
     }
   };
 
-  // Decline Incoming Call
+  
   const handleDeclineCall = () => {
     if (incomingCall && socketRef.current) {
       socketRef.current.emit("end-call", { to: incomingCall.from });
@@ -433,7 +433,7 @@ export default function VideoCallPage() {
     toast.info("Call declined.");
   };
 
-  // Screen Sharing
+  
   const handleToggleScreenShare = async () => {
     if (!peerConnectionRef.current) return;
 
@@ -441,25 +441,25 @@ export default function VideoCallPage() {
       try {
         const stream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
-          audio: true, // option to share system/tab audio
+          audio: true, 
         });
         screenStreamRef.current = stream;
 
         const videoTrack = stream.getVideoTracks()[0];
 
-        // Replace local camera track in RTCPeerConnection senders
+        
         const senders = peerConnectionRef.current.getSenders();
         const videoSender = senders.find((s) => s.track && s.track.kind === "video");
         if (videoSender) {
           await videoSender.replaceTrack(videoTrack);
         }
 
-        // Listen for user stopping screen share from the browser bar
+        
         videoTrack.onended = () => {
           stopScreenSharing();
         };
 
-        // Render locally
+        
         if (localVideoElementRef.current) {
           localVideoElementRef.current.srcObject = stream;
         }
@@ -480,7 +480,7 @@ export default function VideoCallPage() {
       screenStreamRef.current = null;
     }
 
-    // Restore camera stream
+    
     if (localStreamRef.current && peerConnectionRef.current) {
       const cameraTrack = localStreamRef.current.getVideoTracks()[0];
       const senders = peerConnectionRef.current.getSenders();
@@ -497,7 +497,7 @@ export default function VideoCallPage() {
     toast.info("Screen sharing stopped");
   };
 
-  // Toggles for camera / microphone
+  
   const handleToggleMic = () => {
     if (localStreamRef.current) {
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
@@ -520,23 +520,23 @@ export default function VideoCallPage() {
     }
   };
 
-  // Local Session Recording
+  
   const handleToggleRecording = async () => {
     if (isRecording) {
-      // Stop recording
+      
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stop();
       }
       setIsRecording(false);
       toast.success("Recording stopped and saved to downloads.");
     } else {
-      // Start recording call
+      
       try {
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
         const audioDestination = audioCtx.createMediaStreamDestination();
         let hasAudio = false;
 
-        // Add local mic
+        
         if (localStreamRef.current && localStreamRef.current.getAudioTracks().length > 0) {
           const source = audioCtx.createMediaStreamSource(
             new MediaStream([localStreamRef.current.getAudioTracks()[0]])
@@ -545,7 +545,7 @@ export default function VideoCallPage() {
           hasAudio = true;
         }
 
-        // Add remote peer voice
+        
         if (remoteStreamRef.current && remoteStreamRef.current.getAudioTracks().length > 0) {
           const source = audioCtx.createMediaStreamSource(
             new MediaStream([remoteStreamRef.current.getAudioTracks()[0]])
@@ -556,7 +556,7 @@ export default function VideoCallPage() {
 
         const mixedStream = new MediaStream();
 
-        // Add active video track (either shared screen or remote stream)
+        
         let activeVideoTrack: MediaStreamTrack | null = null;
         if (screenSharing && screenStreamRef.current && screenStreamRef.current.getVideoTracks().length > 0) {
           activeVideoTrack = screenStreamRef.current.getVideoTracks()[0];
@@ -570,12 +570,12 @@ export default function VideoCallPage() {
           mixedStream.addTrack(activeVideoTrack);
         }
 
-        // Add mixed audio track
+        
         if (hasAudio) {
           mixedStream.addTrack(audioDestination.stream.getAudioTracks()[0]);
         }
 
-        // Setup recorder
+        
         const recorder = new MediaRecorder(mixedStream, {
           mimeType: "video/webm;codecs=vp9,opus",
         });
@@ -611,7 +611,7 @@ export default function VideoCallPage() {
     }
   };
 
-  // End Call locally
+  
   const handleEndCallLocal = (notifyRemote = true) => {
     if (isRecording && mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
@@ -627,25 +627,25 @@ export default function VideoCallPage() {
   };
 
   const cleanupCallState = () => {
-    // Stop local camera
+    
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;
     }
 
-    // Stop screen share
+    
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach((track) => track.stop());
       screenStreamRef.current = null;
     }
 
-    // Close WebRTC connection
+    
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
 
-    // Reset states
+    
     setPeerConnection(null);
     setActiveCall(false);
     setCallingUser(null);
@@ -659,7 +659,7 @@ export default function VideoCallPage() {
     }
   };
 
-  // Search logic
+  
   const filteredUsers = usersList.filter(
     (u) =>
       u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -686,7 +686,7 @@ export default function VideoCallPage() {
 
   return (
     <div className="flex-1 flex flex-col bg-zinc-950 text-zinc-100 min-h-[calc(100vh-56px)] p-6 font-sans">
-      {/* Incoming Call Dialog */}
+      {}
       {incomingCall && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-sm w-full text-center space-y-6 shadow-2xl animate-scale-up">
@@ -726,14 +726,14 @@ export default function VideoCallPage() {
         </div>
       )}
 
-      {/* Active Call View */}
+      {}
       {activeCall ? (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fade-in">
-          {/* Main call screen - 3 columns */}
+          {}
           <div className="lg:col-span-3 flex flex-col gap-4 relative">
             <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden relative min-h-[500px] flex items-center justify-center shadow-inner">
               
-              {/* Remote stream (main display) */}
+              {}
               <video
                 ref={remoteVideoElementRef}
                 autoPlay
@@ -741,7 +741,7 @@ export default function VideoCallPage() {
                 className="w-full h-full object-cover"
               />
 
-              {/* Local Stream (PiP display) */}
+              {}
               <div className="absolute top-4 right-4 w-44 aspect-video bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl z-10">
                 <video
                   ref={localVideoElementRef}
@@ -755,13 +755,13 @@ export default function VideoCallPage() {
                 </div>
               </div>
 
-              {/* Call Details Overlay */}
+              {}
               <div className="absolute top-4 left-4 bg-zinc-950/80 backdrop-blur border border-zinc-800 px-3 py-1.5 rounded-full text-xs flex items-center gap-2">
                 <Circle className="w-3.5 h-3.5 fill-green-500 text-green-500 animate-pulse" />
                 <span>Call in progress with <b>{callingUser?.name}</b></span>
               </div>
 
-              {/* Recording Indicator Overlay */}
+              {}
               {isRecording && (
                 <div className="absolute top-4 left-48 bg-red-600/90 text-white border border-red-500 px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 animate-pulse shadow-lg">
                   <span className="w-2.5 h-2.5 rounded-full bg-white"></span>
@@ -770,7 +770,7 @@ export default function VideoCallPage() {
               )}
             </div>
 
-            {/* Calling Bottom Controls Bar */}
+            {}
             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex flex-wrap justify-between items-center gap-4 shadow-xl">
               <div className="flex items-center gap-3">
                 <div className="flex flex-col">
@@ -780,7 +780,7 @@ export default function VideoCallPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* Mute Mic */}
+                {}
                 <Button
                   variant="ghost"
                   onClick={handleToggleMic}
@@ -794,7 +794,7 @@ export default function VideoCallPage() {
                   {micEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
                 </Button>
 
-                {/* Toggle Camera */}
+                {}
                 <Button
                   variant="ghost"
                   onClick={handleToggleVideo}
@@ -808,7 +808,7 @@ export default function VideoCallPage() {
                   {videoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
                 </Button>
 
-                {/* Share Screen */}
+                {}
                 <Button
                   variant="ghost"
                   onClick={handleToggleScreenShare}
@@ -822,7 +822,7 @@ export default function VideoCallPage() {
                   {screenSharing ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
                 </Button>
 
-                {/* Record session */}
+                {}
                 <Button
                   variant="ghost"
                   onClick={handleToggleRecording}
@@ -838,7 +838,7 @@ export default function VideoCallPage() {
               </div>
 
               <div>
-                {/* End Call */}
+                {}
                 <Button
                   variant="destructive"
                   className="rounded-full px-6 py-5 flex items-center gap-2 shadow-lg shadow-red-500/20 hover:scale-105 transition-transform"
@@ -851,7 +851,7 @@ export default function VideoCallPage() {
             </div>
           </div>
 
-          {/* Watch YouTube Together Panel - 1 column */}
+          {}
           <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col gap-4 shadow-xl">
             <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
               <Tv className="w-5 h-5 text-red-500" />
@@ -878,7 +878,7 @@ export default function VideoCallPage() {
               </div>
             </div>
 
-            {/* Synchronization Control Utilities */}
+            {}
             {currentYtVideoId && (
               <div className="flex gap-2">
                 <Button
@@ -892,7 +892,7 @@ export default function VideoCallPage() {
               </div>
             )}
 
-            {/* Youtube Player Element */}
+            {}
             <div className="flex-1 min-h-[220px] bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800 flex items-center justify-center relative">
               <div id="yt-player" className="w-full h-full" ref={ytPlayerContainerRef}></div>
               {!currentYtVideoId && (
@@ -905,10 +905,10 @@ export default function VideoCallPage() {
           </div>
         </div>
       ) : (
-        /* Setup / Dialer Workspace */
+        
         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          {/* User List Panel */}
+          {}
           <div className="md:col-span-2 bg-zinc-900/60 border border-zinc-800/80 backdrop-blur rounded-3xl p-6 flex flex-col gap-6 shadow-2xl">
             <div className="flex flex-col gap-1">
               <h2 className="text-2xl font-bold tracking-tight text-zinc-100 flex items-center gap-2">
@@ -920,7 +920,7 @@ export default function VideoCallPage() {
               </p>
             </div>
 
-            {/* Search filter */}
+            {}
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-zinc-500" />
               <Input
@@ -932,7 +932,7 @@ export default function VideoCallPage() {
               />
             </div>
 
-            {/* Users grid list */}
+            {}
             <div className="flex-1 overflow-y-auto max-h-[500px] pr-2 space-y-3">
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((u) => {
@@ -988,7 +988,7 @@ export default function VideoCallPage() {
             </div>
           </div>
 
-          {/* Quick Info & Guide */}
+          {}
           <div className="bg-zinc-900/60 border border-zinc-800/80 backdrop-blur rounded-3xl p-6 flex flex-col gap-6 shadow-2xl justify-between">
             <div className="space-y-6">
               <div className="border-b border-zinc-800 pb-4">
@@ -996,7 +996,7 @@ export default function VideoCallPage() {
                 <p className="text-xs text-zinc-400 mt-1">Connect, Share, and Sync Media</p>
               </div>
 
-              {/* Status card */}
+              {}
               <div className="bg-zinc-950/80 border border-zinc-800 p-4 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img
@@ -1015,7 +1015,7 @@ export default function VideoCallPage() {
                 </div>
               </div>
 
-              {/* Feature guide */}
+              {}
               <div className="space-y-4 text-xs text-zinc-400 leading-relaxed">
                 <h4 className="font-bold text-zinc-300 uppercase tracking-wider text-[10px]">Key Features</h4>
                 <ul className="space-y-3 list-disc pl-4">

@@ -11,17 +11,17 @@ const razorpay = new Razorpay({
   key_secret: getRazorpaySecret(),
 });
 
-// Plan prices in paise (1 INR = 100 paise)
+
 const planPrices = {
-  bronze: 1000, // ₹10
-  silver: 5000, // ₹50
-  gold: 10000, // ₹100
-  premium: 100, // ₹1 for download premium (test)
+  bronze: 1000, 
+  silver: 5000, 
+  gold: 10000, 
+  premium: 100, 
 };
 
 const validPlans = ["bronze", "silver", "gold"];
 
-// Create Razorpay order
+
 export const createOrder = async (req, res) => {
   const { plan } = req.body;
 
@@ -64,7 +64,7 @@ const verifyRazorpayPayment = async ({
 
   if (signatureValid) return true;
 
-  // Fallback: confirm payment directly with Razorpay API
+  
   const payment = await razorpay.payments.fetch(paymentId);
   return (
     payment.order_id === orderId &&
@@ -72,7 +72,7 @@ const verifyRazorpayPayment = async ({
   );
 };
 
-// Verify payment and update user plan
+
 export const verifyPayment = async (req, res) => {
   const {
     razorpay_order_id,
@@ -104,7 +104,7 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
-    // Update user plan in DB
+    
     const updatedUser = await users.findByIdAndUpdate(
       userId,
       { $set: { plan: plan } },
@@ -115,7 +115,7 @@ export const verifyPayment = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Send invoice email — non-fatal: don't let email failure block payment success
+    
     try {
       await sendInvoiceEmail(updatedUser, plan, razorpay_payment_id);
     } catch (emailError) {
@@ -129,7 +129,7 @@ export const verifyPayment = async (req, res) => {
   }
 };
 
-// Send invoice email
+
 const sendInvoiceEmail = async (user, plan, paymentId) => {
   const planDetails = {
     bronze: { price: "₹10", watchLimit: "7 minutes", downloads: "Unlimited" },
@@ -168,7 +168,7 @@ const sendInvoiceEmail = async (user, plan, paymentId) => {
   });
 };
 
-// Track and handle download
+
 export const downloadVideo = async (req, res) => {
   const { videoId, videoTitle } = req.body;
   const userId = req.userId;
@@ -182,13 +182,13 @@ export const downloadVideo = async (req, res) => {
       ? new Date(user.lastDownloadDate).toDateString()
       : null;
 
-    // Reset count if it's a new day
+    
     if (lastDownload !== today) {
       user.downloadCount = 0;
       user.lastDownloadDate = new Date();
     }
 
-    // Free users limited to 1 download per day; paid plans get unlimited
+    
     if (user.plan === "free" && user.downloadCount >= 1) {
       return res.status(403).json({
         message:
@@ -197,7 +197,7 @@ export const downloadVideo = async (req, res) => {
       });
     }
 
-    // Add to downloads history
+    
     user.downloads.push({ videoId, videoTitle });
     user.downloadCount += 1;
     await user.save();
@@ -209,7 +209,7 @@ export const downloadVideo = async (req, res) => {
   }
 };
 
-// Get user's download history with populated video details
+
 export const getDownloads = async (req, res) => {
   try {
     const user = await users

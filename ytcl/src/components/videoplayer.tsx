@@ -143,14 +143,14 @@ export default function VideoPlayer({
         Your browser does not support the video tag.
       </video>
 
-      {/* Gesture hint zones (invisible) */}
+      {}
       <div className="absolute inset-0 flex pointer-events-none">
         <div className="flex-1" />
         <div className="flex-1" />
         <div className="flex-1" />
       </div>
 
-      {/* Feedback overlay */}
+      {}
       {feedback && (
         <div
           key={feedback.key}
@@ -177,7 +177,7 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {/* Subtle play indicator when paused */}
+      {}
       {!isPlaying && !feedback && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-black/40 rounded-full p-3">
@@ -186,7 +186,7 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {/* Gesture legend */}
+      {}
       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 pointer-events-none">
         <p className="text-[10px] sm:text-xs text-white/70 text-center leading-tight">
           Double-tap sides to seek · Tap center to play/pause · Triple-tap center

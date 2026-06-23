@@ -91,7 +91,7 @@ export default function VideoCard({ video }: any) {
         </div>
       </Link>
 
-      {/* Download button */}
+      {}
       <button
         onClick={handleDownload}
         className="mt-2 w-full text-xs text-gray-500 hover:text-red-500 flex items-center gap-1 transition-colors"

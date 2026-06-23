@@ -9,7 +9,7 @@ const getVideoDuration = (filepath) => {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(filepath, (err, metadata) => {
       if (err) reject(err);
-      else resolve(Math.floor(metadata.format.duration)); // duration in seconds
+      else resolve(Math.floor(metadata.format.duration)); 
     });
   });
 };
@@ -21,7 +21,7 @@ export const uploadvideo = async (req, res) => {
       .json({ message: "plz upload a mp4 video file only" });
   }
   try {
-    // Get real duration from the uploaded file
+    
     const duration = await getVideoDuration(req.file.path);
 
     const file = new video({

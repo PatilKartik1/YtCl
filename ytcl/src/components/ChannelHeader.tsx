@@ -6,10 +6,10 @@ const ChannelHeader = ({ channel, user }: any) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   return (
     <div className="w-full">
-      {/* Banner */}
+      {}
       <div className="relative h-32 md:h-48 lg:h-64 bg-gradient-to-r from-blue-400 to-purple-500 overflow-hidden"></div>
 
-      {/* Channel Info */}
+      {}
       <div className="px-4 py-6">
         <div className="flex flex-col md:flex-row gap-6 items-start">
           <Avatar className="w-20 h-20 md:w-32 md:h-32">

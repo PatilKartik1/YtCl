@@ -10,7 +10,7 @@ import {
 import authMiddleware from "../middleware/auth.js";
 
 const routes = express.Router();
-routes.get("/:videoid", getallcomment);                               // public — read comments
+routes.get("/:videoid", getallcomment);                               
 routes.post("/postcomment", authMiddleware, postcomment);
 routes.delete("/deletecomment/:id", authMiddleware, deletecomment);
 routes.post("/editcomment/:id", authMiddleware, editcomment);

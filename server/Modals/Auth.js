@@ -14,18 +14,18 @@ const userschema = mongoose.Schema({
   },
   joinedon: { type: Date, default: Date.now },
 
-  // Plan fields
+  
   plan: {
     type: String,
     enum: ["free", "bronze", "silver", "gold"],
     default: "free",
   },
 
-  // Download tracking
+  
   downloadCount: { type: Number, default: 0 },
   lastDownloadDate: { type: Date, default: null },
 
-  // Downloads history
+  
   downloads: [
     {
       videoId: { type: mongoose.Schema.Types.ObjectId, ref: "videofiles" },

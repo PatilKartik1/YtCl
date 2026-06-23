@@ -8,6 +8,6 @@ import authMiddleware from "../middleware/auth.js";
 
 const routes = express.Router();
 routes.get("/", authMiddleware, getallhistoryVideo);
-routes.post("/views/:videoId", handleview);                        // public — anonymous view count
+routes.post("/views/:videoId", handleview);                        
 routes.post("/:videoId", authMiddleware, handlehistory);
 export default routes;

@@ -24,7 +24,7 @@ export const UserProvider = ({ children }) => {
           setIsSouthIndia(true);
         }
       } catch (err) {
-        // Silently ignore to prevent Next.js from throwing a runtime error overlay for network blocks (e.g. adblockers)
+        
       }
     };
     detectLocation();
@@ -82,7 +82,7 @@ export const UserProvider = ({ children }) => {
           logout();
         }
       } else {
-        // If not a Firebase user, check if there's a custom OTP user session
+        
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
           try {

@@ -59,7 +59,7 @@ const OTPLoginModal: React.FC<OTPLoginModalProps> = ({ isOpen, onClose }) => {
       login(response.data.result, response.data.token);
       toast.success("Logged in successfully!");
       onClose();
-      // Reset state for future logins
+      
       setTimeout(() => {
         setStep("REQUEST");
         setIdentifier("");
