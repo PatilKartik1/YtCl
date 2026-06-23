@@ -15,7 +15,10 @@ dotenv.config();
 const app = express();
 import path from "path";
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  origin: function (origin, callback) {
+    // Allow any origin or localhost
+    callback(null, true);
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: "30mb", extended: true }));

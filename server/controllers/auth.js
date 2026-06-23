@@ -52,8 +52,8 @@ export const sendOtp = async (req, res) => {
       console.log(`[OTP SMS] Sending OTP ${otp} to mobile: ${mobile}`);
       if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER) {
         const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-        // Ensure mobile has country code, e.g. +91
-        const formattedMobile = mobile.startsWith('+') ? mobile : `+91${mobile}`;
+        const mobileStr = String(mobile);
+        const formattedMobile = mobileStr.startsWith('+') ? mobileStr : `+91${mobileStr}`;
         try {
           await twilioClient.messages.create({
             body: `Your YtCl Login OTP is: ${otp}`,
