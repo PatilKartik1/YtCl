@@ -218,11 +218,9 @@ export default function VideoCallPage() {
     loadYoutubeAPI();
   }, [activeCall]);
 
-  // Set video stream sources and play when call is active or state changes
   useEffect(() => {
     if (activeCall) {
       const playStreams = async () => {
-        // Allow a tiny delay for DOM nodes to mount
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         if (localStreamRef.current && localVideoElementRef.current) {
@@ -763,16 +761,12 @@ export default function VideoCallPage() {
         </div>
       )}
 
-      {}
       {activeCall ? (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fade-in">
-          {}
           <div className="lg:col-span-3 flex flex-col gap-4 relative">
             <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden relative min-h-[300px] sm:min-h-[500px] aspect-video sm:aspect-auto flex items-center justify-center shadow-inner">
               
-              {/* Video Feeds Container */}
               {screenSharing ? (
-                /* Screen sharing active: local screen share is large, remote camera is in PiP */
                 <>
                   <video
                     ref={localVideoElementRef}
@@ -794,7 +788,6 @@ export default function VideoCallPage() {
                   </div>
                 </>
               ) : (
-                /* Normal: remote camera is large, local camera is in PiP */
                 <>
                   <video
                     ref={remoteVideoElementRef}
@@ -817,7 +810,6 @@ export default function VideoCallPage() {
                 </>
               )}
 
-              {/* Outgoing Calling Placeholder */}
               {!callConnected && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/90 z-20 space-y-4">
                   <div className="relative">
@@ -838,7 +830,6 @@ export default function VideoCallPage() {
                 </div>
               )}
 
-              {/* Status Badges Container */}
               <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex flex-col xs:flex-row gap-2 z-10">
                 <div className="bg-zinc-950/80 backdrop-blur border border-zinc-800 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs flex items-center gap-1.5">
                   <Circle className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-green-500 text-green-500 ${callConnected ? "animate-pulse" : ""}`} />
@@ -859,7 +850,6 @@ export default function VideoCallPage() {
               </div>
             </div>
 
-            {/* Call Action Bar */}
             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-xl">
               <div className="flex items-center gap-3">
                 <div className="flex flex-col text-center sm:text-left">
@@ -869,7 +859,6 @@ export default function VideoCallPage() {
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3">
-                {/* Microphone Toggle */}
                 <Button
                   variant="ghost"
                   onClick={handleToggleMic}
@@ -883,7 +872,6 @@ export default function VideoCallPage() {
                   {micEnabled ? <Mic className="w-4 h-4 sm:w-5 sm:h-5" /> : <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </Button>
 
-                {/* Camera Toggle */}
                 <Button
                   variant="ghost"
                   onClick={handleToggleVideo}
@@ -897,7 +885,6 @@ export default function VideoCallPage() {
                   {videoEnabled ? <Video className="w-4 h-4 sm:w-5 sm:h-5" /> : <VideoOff className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </Button>
 
-                {/* Screen Share Toggle */}
                 <Button
                   variant="ghost"
                   onClick={handleToggleScreenShare}
@@ -911,7 +898,6 @@ export default function VideoCallPage() {
                   {screenSharing ? <MonitorOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Monitor className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </Button>
 
-                {/* Session Recording Toggle */}
                 <Button
                   variant="ghost"
                   onClick={handleToggleRecording}
@@ -927,7 +913,6 @@ export default function VideoCallPage() {
               </div>
 
               <div>
-                {/* End Call Button */}
                 <Button
                   variant="destructive"
                   className="rounded-full px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-2 shadow-lg shadow-red-500/20 hover:scale-105 transition-transform text-xs sm:text-sm"
@@ -940,7 +925,6 @@ export default function VideoCallPage() {
             </div>
           </div>
 
-          {}
           <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col gap-4 shadow-xl">
             <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
               <Tv className="w-5 h-5 text-red-500" />
