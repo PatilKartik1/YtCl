@@ -731,9 +731,9 @@ export default function VideoCallPage() {
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fade-in">
           {}
           <div className="lg:col-span-3 flex flex-col gap-4 relative">
-            <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden relative min-h-[500px] flex items-center justify-center shadow-inner">
+            <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden relative min-h-[300px] sm:min-h-[500px] aspect-video sm:aspect-auto flex items-center justify-center shadow-inner">
               
-              {}
+              {/* Remote video (Full container) */}
               <video
                 ref={remoteVideoElementRef}
                 autoPlay
@@ -741,8 +741,8 @@ export default function VideoCallPage() {
                 className="w-full h-full object-cover"
               />
 
-              {}
-              <div className="absolute top-4 right-4 w-44 aspect-video bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl z-10">
+              {/* Local video (Picture in Picture) */}
+              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 w-24 sm:w-44 aspect-video bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl z-10">
                 <video
                   ref={localVideoElementRef}
                   autoPlay
@@ -750,98 +750,98 @@ export default function VideoCallPage() {
                   muted
                   className="w-full h-full object-cover scale-x-[-1]"
                 />
-                <div className="absolute bottom-1 left-2 text-[10px] bg-black/60 px-1.5 py-0.5 rounded text-zinc-300">
+                <div className="absolute bottom-0.5 left-1 text-[8px] sm:text-[10px] bg-black/60 px-1 py-0.5 rounded text-zinc-300">
                   You {screenSharing && "(Sharing)"}
                 </div>
               </div>
 
-              {}
-              <div className="absolute top-4 left-4 bg-zinc-950/80 backdrop-blur border border-zinc-800 px-3 py-1.5 rounded-full text-xs flex items-center gap-2">
-                <Circle className="w-3.5 h-3.5 fill-green-500 text-green-500 animate-pulse" />
-                <span>Call in progress with <b>{callingUser?.name}</b></span>
-              </div>
-
-              {}
-              {isRecording && (
-                <div className="absolute top-4 left-48 bg-red-600/90 text-white border border-red-500 px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 animate-pulse shadow-lg">
-                  <span className="w-2.5 h-2.5 rounded-full bg-white"></span>
-                  <span>REC</span>
+              {/* Status Badges Container */}
+              <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex flex-col xs:flex-row gap-2 z-10">
+                <div className="bg-zinc-950/80 backdrop-blur border border-zinc-800 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs flex items-center gap-1.5">
+                  <Circle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-green-500 text-green-500 animate-pulse" />
+                  <span className="max-w-[120px] xs:max-w-none truncate">Call with <b>{callingUser?.name}</b></span>
                 </div>
-              )}
+                {isRecording && (
+                  <div className="bg-red-600/90 text-white border border-red-500 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs flex items-center gap-1.5 animate-pulse shadow-lg w-fit">
+                    <span className="w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-white"></span>
+                    <span>REC</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {}
-            <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex flex-wrap justify-between items-center gap-4 shadow-xl">
+            {/* Call Action Bar */}
+            <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-xl">
               <div className="flex items-center gap-3">
-                <div className="flex flex-col">
+                <div className="flex flex-col text-center sm:text-left">
                   <span className="font-semibold text-sm">{callingUser?.name}</span>
                   <span className="text-xs text-zinc-400">{callingUser?.email}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                {}
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Microphone Toggle */}
                 <Button
                   variant="ghost"
                   onClick={handleToggleMic}
-                  className={`w-12 h-12 rounded-full p-0 flex items-center justify-center border transition-all ${
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full p-0 flex items-center justify-center border transition-all ${
                     micEnabled
                       ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700"
                       : "bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/30"
                   }`}
                   title={micEnabled ? "Mute Mic" : "Unmute Mic"}
                 >
-                  {micEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                  {micEnabled ? <Mic className="w-4 h-4 sm:w-5 sm:h-5" /> : <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </Button>
 
-                {}
+                {/* Camera Toggle */}
                 <Button
                   variant="ghost"
                   onClick={handleToggleVideo}
-                  className={`w-12 h-12 rounded-full p-0 flex items-center justify-center border transition-all ${
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full p-0 flex items-center justify-center border transition-all ${
                     videoEnabled
                       ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700"
                       : "bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/30"
                   }`}
                   title={videoEnabled ? "Turn Camera Off" : "Turn Camera On"}
                 >
-                  {videoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                  {videoEnabled ? <Video className="w-4 h-4 sm:w-5 sm:h-5" /> : <VideoOff className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </Button>
 
-                {}
+                {/* Screen Share Toggle */}
                 <Button
                   variant="ghost"
                   onClick={handleToggleScreenShare}
-                  className={`w-12 h-12 rounded-full p-0 flex items-center justify-center border transition-all ${
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full p-0 flex items-center justify-center border transition-all ${
                     screenSharing
                       ? "bg-red-600 hover:bg-red-700 text-white border-red-500"
                       : "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700"
                   }`}
                   title={screenSharing ? "Stop Sharing Screen" : "Share Screen"}
                 >
-                  {screenSharing ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
+                  {screenSharing ? <MonitorOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Monitor className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </Button>
 
-                {}
+                {/* Session Recording Toggle */}
                 <Button
                   variant="ghost"
                   onClick={handleToggleRecording}
-                  className={`w-12 h-12 rounded-full p-0 flex items-center justify-center border transition-all ${
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full p-0 flex items-center justify-center border transition-all ${
                     isRecording
                       ? "bg-red-600 animate-pulse text-white border-red-500"
                       : "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700"
                   }`}
                   title={isRecording ? "Stop Recording" : "Record Session"}
                 >
-                  <Circle className={`w-5 h-5 ${isRecording ? "fill-white text-white" : "fill-red-500 text-red-500"}`} />
+                  <Circle className={`w-4 h-4 sm:w-5 sm:h-5 ${isRecording ? "fill-white text-white" : "fill-red-500 text-red-500"}`} />
                 </Button>
               </div>
 
               <div>
-                {}
+                {/* End Call Button */}
                 <Button
                   variant="destructive"
-                  className="rounded-full px-6 py-5 flex items-center gap-2 shadow-lg shadow-red-500/20 hover:scale-105 transition-transform"
+                  className="rounded-full px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-2 shadow-lg shadow-red-500/20 hover:scale-105 transition-transform text-xs sm:text-sm"
                   onClick={() => handleEndCallLocal(true)}
                 >
                   <PhoneOff className="w-4 h-4" />

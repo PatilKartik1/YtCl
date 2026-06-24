@@ -5,7 +5,8 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { UserProvider, useUser } from "../lib/AuthContext";
 import { ThemeProvider, useTheme } from "next-themes";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 const ThemeManager = ({ children }: { children: React.ReactNode }) => {
   const { setTheme } = useTheme();
@@ -32,17 +33,33 @@ const ThemeManager = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default function App({ Component, pageProps }: AppProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isMediaPage = router.pathname.startsWith("/watch") || router.pathname === "/video-call";
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(!isMediaPage);
+      } else {
+        setSidebarOpen(false);
+      }
+    }
+  }, [router.pathname]);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <UserProvider>
         <ThemeManager>
-          <div className="min-h-screen bg-background text-foreground">
+          <div className="min-h-screen bg-background text-foreground flex flex-col">
             <title>YtCl</title>
-            <Header />
+            <Header onMenuToggle={() => setSidebarOpen((prev) => !prev)} />
             <Toaster />
-            <div className="flex">
-              <Sidebar />
-              <Component {...pageProps} />
+            <div className="flex flex-1 relative overflow-x-hidden">
+              <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+              <main className="flex-1 min-w-0 overflow-x-hidden">
+                <Component {...pageProps} />
+              </main>
             </div>
           </div>
         </ThemeManager>

@@ -134,13 +134,13 @@ export default function DownloadsContent() {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-shrink-0 self-center"
+                className="flex-shrink-0 self-center px-2 sm:px-3"
                 onClick={() =>
                   handleRedownload(video.filepath, item.videoTitle)
                 }
               >
-                <Download className="w-4 h-4 mr-1" />
-                Re-download
+                <Download className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Re-download</span>
               </Button>
             </div>
           );

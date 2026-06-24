@@ -144,27 +144,29 @@ const VideoInfo = ({ video }: any) => {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">{video.videotitle}</h1>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Avatar className="w-10 h-10">
-            <AvatarFallback>{video.videochanel[0]}</AvatarFallback>
-          </Avatar>
-          <div>
-            <h3 className="font-medium">{video.videochanel}</h3>
-            <p className="text-sm text-gray-600">1.2M subscribers</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-3">
+            <Avatar className="w-10 h-10">
+              <AvatarFallback>{video.videochanel[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-medium text-sm sm:text-base">{video.videochanel}</h3>
+              <p className="text-xs sm:text-sm text-gray-600">1.2M subscribers</p>
+            </div>
           </div>
-          <Button className="ml-4">Subscribe</Button>
+          <Button className="rounded-full text-xs sm:text-sm px-4">Subscribe</Button>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-secondary rounded-full">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 w-[calc(100%+32px)] sm:w-auto scrollbar-none flex-nowrap">
+          <div className="flex items-center bg-secondary rounded-full flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-l-full"
+              className="rounded-l-full flex-shrink-0 h-9"
               onClick={handleLike}
             >
               <ThumbsUp
-                className={`w-5 h-5 mr-2 ${
+                className={`w-4 h-4 mr-1.5 ${
                   isLiked ? "fill-current" : ""
                 }`}
               />
@@ -174,11 +176,11 @@ const VideoInfo = ({ video }: any) => {
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-r-full"
+              className="rounded-r-full flex-shrink-0 h-9"
               onClick={handleDislike}
             >
               <ThumbsDown
-                className={`w-5 h-5 mr-2 ${
+                className={`w-4 h-4 mr-1.5 ${
                   isDisliked ? "fill-current" : ""
                 }`}
               />
@@ -188,38 +190,38 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-secondary rounded-full ${
+            className={`bg-secondary rounded-full flex-shrink-0 h-9 ${
               isWatchLater ? "text-primary" : ""
             }`}
             onClick={handleWatchLater}
           >
-            <Clock className="w-5 h-5 mr-2" />
+            <Clock className="w-4 h-4 mr-1.5" />
             {isWatchLater ? "Saved" : "Watch Later"}
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="bg-secondary rounded-full"
+            className="bg-secondary rounded-full flex-shrink-0 h-9"
           >
-            <Share className="w-5 h-5 mr-2" />
+            <Share className="w-4 h-4 mr-1.5" />
             Share
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="bg-secondary rounded-full"
+            className="bg-secondary rounded-full flex-shrink-0 h-9"
             onClick={handleDownload}
             disabled={isDownloading}
           >
-            <Download className="w-5 h-5 mr-2" />
+            <Download className="w-4 h-4 mr-1.5" />
             {isDownloading ? "Downloading..." : "Download"}
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="bg-secondary rounded-full"
+            className="bg-secondary rounded-full flex-shrink-0 h-9 w-9"
           >
-            <MoreHorizontal className="w-5 h-5" />
+            <MoreHorizontal className="w-4 h-4" />
           </Button>
         </div>
       </div>
