@@ -45,6 +45,7 @@ export default function VideoCallPage() {
 
   
   const [activeCall, setActiveCall] = useState<boolean>(false);
+  const [callConnected, setCallConnected] = useState<boolean>(false);
   const [callingUser, setCallingUser] = useState<UserType | null>(null);
   const [incomingCall, setIncomingCall] = useState<{
     from: string;
@@ -142,6 +143,7 @@ export default function VideoCallPage() {
         try {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
           setActiveCall(true);
+          setCallConnected(true);
           toast.success("Call connected!");
         } catch (error) {
           console.error("Error setting remote description from answer:", error);
@@ -215,6 +217,36 @@ export default function VideoCallPage() {
 
     loadYoutubeAPI();
   }, [activeCall]);
+
+  // Set video stream sources and play when call is active or state changes
+  useEffect(() => {
+    if (activeCall) {
+      const playStreams = async () => {
+        // Allow a tiny delay for DOM nodes to mount
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        if (localStreamRef.current && localVideoElementRef.current) {
+          localVideoElementRef.current.srcObject = localStreamRef.current;
+          try {
+            await localVideoElementRef.current.play();
+          } catch (e) {
+            console.warn("Failed to play local video:", e);
+          }
+        }
+
+        if (remoteStreamRef.current && remoteVideoElementRef.current) {
+          remoteVideoElementRef.current.srcObject = remoteStreamRef.current;
+          try {
+            await remoteVideoElementRef.current.play();
+          } catch (e) {
+            console.warn("Failed to play remote video:", e);
+          }
+        }
+      };
+
+      playStreams();
+    }
+  }, [activeCall, callConnected, screenSharing]);
 
   const initializeYoutubePlayer = () => {
     if (ytPlayerRef.current) return;
@@ -345,6 +377,7 @@ export default function VideoCallPage() {
       remoteStreamRef.current = remoteStream;
       if (remoteVideoElementRef.current) {
         remoteVideoElementRef.current.srcObject = remoteStream;
+        remoteVideoElementRef.current.play().catch(e => console.warn("Failed to play remote stream ontrack:", e));
       }
     };
 
@@ -367,6 +400,8 @@ export default function VideoCallPage() {
   const handleInitiateCall = async (recipient: UserType) => {
     setCallingUser(recipient);
     callingUserIdRef.current = recipient._id;
+    setActiveCall(true);
+    setCallConnected(false);
 
     try {
       const stream = await setupLocalMedia();
@@ -415,6 +450,7 @@ export default function VideoCallPage() {
       if (matchUser) setCallingUser(matchUser);
 
       setActiveCall(true);
+      setCallConnected(true);
       setIncomingCall(null);
       toast.success("Call connected!");
     } catch (error) {
@@ -648,6 +684,7 @@ export default function VideoCallPage() {
     
     setPeerConnection(null);
     setActiveCall(false);
+    setCallConnected(false);
     setCallingUser(null);
     setScreenSharing(false);
     setIncomingCall(null);
@@ -733,33 +770,85 @@ export default function VideoCallPage() {
           <div className="lg:col-span-3 flex flex-col gap-4 relative">
             <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden relative min-h-[300px] sm:min-h-[500px] aspect-video sm:aspect-auto flex items-center justify-center shadow-inner">
               
-              {/* Remote video (Full container) */}
-              <video
-                ref={remoteVideoElementRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
+              {/* Video Feeds Container */}
+              {screenSharing ? (
+                /* Screen sharing active: local screen share is large, remote camera is in PiP */
+                <>
+                  <video
+                    ref={localVideoElementRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover scale-x-1"
+                  />
+                  <div className="absolute top-2 right-2 sm:top-4 sm:right-4 w-24 sm:w-44 aspect-video bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl z-10">
+                    <video
+                      ref={remoteVideoElementRef}
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0.5 left-1 text-[8px] sm:text-[10px] bg-black/60 px-1 py-0.5 rounded text-zinc-300">
+                      {callingUser?.name}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Normal: remote camera is large, local camera is in PiP */
+                <>
+                  <video
+                    ref={remoteVideoElementRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 right-2 sm:top-4 sm:right-4 w-24 sm:w-44 aspect-video bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl z-10">
+                    <video
+                      ref={localVideoElementRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover scale-x-[-1]"
+                    />
+                    <div className="absolute bottom-0.5 left-1 text-[8px] sm:text-[10px] bg-black/60 px-1 py-0.5 rounded text-zinc-300">
+                      You
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* Local video (Picture in Picture) */}
-              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 w-24 sm:w-44 aspect-video bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl z-10">
-                <video
-                  ref={localVideoElementRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover scale-x-[-1]"
-                />
-                <div className="absolute bottom-0.5 left-1 text-[8px] sm:text-[10px] bg-black/60 px-1 py-0.5 rounded text-zinc-300">
-                  You {screenSharing && "(Sharing)"}
+              {/* Outgoing Calling Placeholder */}
+              {!callConnected && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/90 z-20 space-y-4">
+                  <div className="relative">
+                    <img
+                      src={callingUser?.image || "https://github.com/shadcn.png"}
+                      alt={callingUser?.name}
+                      className="w-24 h-24 rounded-full border-4 border-zinc-850 object-cover animate-pulse"
+                    />
+                    <span className="absolute bottom-1 right-1 flex h-4 w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-450 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-zinc-900"></span>
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-lg font-bold text-zinc-100">{callingUser?.name}</h3>
+                    <p className="text-xs text-zinc-400 mt-1 animate-pulse">Calling...</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Status Badges Container */}
               <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex flex-col xs:flex-row gap-2 z-10">
                 <div className="bg-zinc-950/80 backdrop-blur border border-zinc-800 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs flex items-center gap-1.5">
-                  <Circle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-green-500 text-green-500 animate-pulse" />
-                  <span className="max-w-[120px] xs:max-w-none truncate">Call with <b>{callingUser?.name}</b></span>
+                  <Circle className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-green-500 text-green-500 ${callConnected ? "animate-pulse" : ""}`} />
+                  <span className="max-w-[120px] xs:max-w-none truncate">
+                    {callConnected ? (
+                      <span>Call with <b>{callingUser?.name}</b></span>
+                    ) : (
+                      <span>Calling <b>{callingUser?.name}</b>...</span>
+                    )}
+                  </span>
                 </div>
                 {isRecording && (
                   <div className="bg-red-600/90 text-white border border-red-500 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs flex items-center gap-1.5 animate-pulse shadow-lg w-fit">
