@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Channeldialogue from "./channeldialogue";
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
-import OTPLoginModal from "./OTPLoginModal";
+import LoginModal from "./LoginModal";
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -215,7 +215,7 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
         onclose={() => setisdialogeopen(false)}
         mode="create"
       />
-      <OTPLoginModal 
+      <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
       />
