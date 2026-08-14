@@ -15,32 +15,40 @@ const getVideoDuration = (filepath) => {
 };
 
 export const uploadvideo = async (req, res) => {
-  if (req.file === undefined) {
+  if (!req.files || !req.files.file) {
     return res
       .status(404)
       .json({ message: "plz upload a mp4 video file only" });
   }
   try {
-    
-    const duration = await getVideoDuration(req.file.path);
+    const videoFile = req.files.file[0];
+    const thumbnailFile = req.files.thumbnail ? req.files.thumbnail[0] : null;
+
+    const duration = await getVideoDuration(videoFile.path);
 
     const file = new video({
       videotitle: req.body.videotitle,
-      filename: req.file.originalname,
-      filepath: req.file.path,
-      filetype: req.file.mimetype,
-      filesize: req.file.size,
+      filename: videoFile.originalname,
+      filepath: videoFile.path,
+      filetype: videoFile.mimetype,
+      filesize: videoFile.size,
       videochanel: req.body.videochanel,
       uploader: req.body.uploader,
       duration: duration,
+      thumbnailPath: thumbnailFile ? thumbnailFile.path.replace(/\\/g, "/") : "",
     });
     await file.save();
     return res.status(201).json("file uploaded successfully");
   } catch (error) {
     console.error("error:", error);
-    if (req.file && req.file.path) {
-      fs.unlink(req.file.path, (err) => {
+    if (req.files && req.files.file && req.files.file[0].path) {
+      fs.unlink(req.files.file[0].path, (err) => {
         if (err) console.error("Failed to delete orphaned upload file:", err);
+      });
+    }
+    if (req.files && req.files.thumbnail && req.files.thumbnail[0].path) {
+      fs.unlink(req.files.thumbnail[0].path, (err) => {
+        if (err) console.error("Failed to delete orphaned thumbnail file:", err);
       });
     }
     return res.status(500).json({ message: "Something went wrong" });

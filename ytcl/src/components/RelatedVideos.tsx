@@ -9,9 +9,10 @@ interface RelatedVideosProps {
     videochanel: string;
     views: number;
     createdAt: string;
+    filepath?: string;
+    thumbnailPath?: string;
   }>;
 }
-const vid = "/video/vdo.mp4";
 export default function RelatedVideos({ videos }: RelatedVideosProps) {
   return (
     <div className="space-y-2">
@@ -23,8 +24,9 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
         >
           <div className="relative w-32 xs:w-40 aspect-video bg-gray-100 rounded overflow-hidden flex-shrink-0">
             <video
-              src={vid}
-              className="object-cover group-hover:scale-105 transition-transform duration-200"
+              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video.filepath}`}
+              poster={video.thumbnailPath ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${video.thumbnailPath}` : undefined}
+              className="object-cover group-hover:scale-105 transition-transform duration-200 w-full h-full pointer-events-none"
             />
           </div>
           <div className="flex-1 min-w-0">

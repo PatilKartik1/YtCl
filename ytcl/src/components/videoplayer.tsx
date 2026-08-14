@@ -11,6 +11,7 @@ interface VideoPlayerProps {
     _id: string;
     videotitle: string;
     filepath: string;
+    thumbnailPath?: string;
   };
   videoRef?: RefObject<HTMLVideoElement | null>;
   onNextVideo?: () => void;
@@ -132,9 +133,11 @@ export default function VideoPlayer({
       onPointerUp={handlePointerUp}
     >
       <video
+        key={video?._id}
         ref={ref}
         className="w-full h-full object-contain"
         playsInline
+        poster={video?.thumbnailPath ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${video.thumbnailPath}` : undefined}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onClick={(e) => e.preventDefault()}
@@ -186,13 +189,6 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {}
-      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 pointer-events-none">
-        <p className="text-[10px] sm:text-xs text-white/70 text-center leading-tight">
-          Double-tap sides to seek · Tap center to play/pause · Triple-tap center
-          for next · Triple-tap left for comments · Triple-tap right to exit
-        </p>
-      </div>
     </div>
   );
 }

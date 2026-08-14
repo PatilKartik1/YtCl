@@ -246,6 +246,31 @@ export default function VideoCallPage() {
     }
   }, [activeCall, callConnected, screenSharing]);
 
+  useEffect(() => {
+    const handleFullscreenChange = async () => {
+      if (document.fullscreenElement) {
+        if (remoteVideoElementRef.current && document.pictureInPictureEnabled && !document.pictureInPictureElement) {
+          try {
+            await remoteVideoElementRef.current.requestPictureInPicture();
+          } catch (e) {
+            console.error("Failed to enter PiP:", e);
+          }
+        }
+      } else {
+        if (document.pictureInPictureElement) {
+          try {
+            await document.exitPictureInPicture();
+          } catch (e) {
+            console.error("Failed to exit PiP:", e);
+          }
+        }
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
   const initializeYoutubePlayer = () => {
     if (ytPlayerRef.current) return;
     try {
@@ -720,7 +745,7 @@ export default function VideoCallPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-zinc-950 text-zinc-100 min-h-[calc(100vh-56px)] p-6 font-sans">
+    <div className="flex-1 flex flex-col bg-zinc-950 text-zinc-100 min-h-[calc(100vh-56px)] p-2 sm:p-4 md:p-6 font-sans">
       {}
       {incomingCall && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
@@ -762,9 +787,9 @@ export default function VideoCallPage() {
       )}
 
       {activeCall ? (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fade-in">
-          <div className="lg:col-span-3 flex flex-col gap-4 relative">
-            <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden relative min-h-[300px] sm:min-h-[500px] aspect-video sm:aspect-auto flex items-center justify-center shadow-inner">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 animate-fade-in">
+          <div className="lg:col-span-2 xl:col-span-3 flex flex-col gap-4 relative">
+            <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden relative min-h-[40vh] sm:min-h-[500px] flex items-center justify-center shadow-inner">
               
               {screenSharing ? (
                 <>
@@ -831,9 +856,9 @@ export default function VideoCallPage() {
               )}
 
               <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex flex-col xs:flex-row gap-2 z-10">
-                <div className="bg-zinc-950/80 backdrop-blur border border-zinc-800 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs flex items-center gap-1.5">
-                  <Circle className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-green-500 text-green-500 ${callConnected ? "animate-pulse" : ""}`} />
-                  <span className="max-w-[120px] xs:max-w-none truncate">
+                <div className="bg-zinc-950/80 backdrop-blur border border-zinc-800 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs flex items-center gap-1.5 shadow-md">
+                  <Circle className={`w-2 h-2 sm:w-3 sm:h-3 fill-green-500 text-green-500 ${callConnected ? "animate-pulse" : ""}`} />
+                  <span className="max-w-[100px] xs:max-w-none truncate">
                     {callConnected ? (
                       <span>Call with <b>{callingUser?.name}</b></span>
                     ) : (
@@ -850,11 +875,11 @@ export default function VideoCallPage() {
               </div>
             </div>
 
-            <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-xl">
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col text-center sm:text-left">
+            <div className="bg-zinc-900 border border-zinc-800 p-3 sm:p-4 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
+              <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
+                <div className="flex flex-col text-center md:text-left">
                   <span className="font-semibold text-sm">{callingUser?.name}</span>
-                  <span className="text-xs text-zinc-400">{callingUser?.email}</span>
+                  <span className="text-xs text-zinc-400 truncate max-w-[150px] sm:max-w-xs">{callingUser?.email}</span>
                 </div>
               </div>
 
@@ -912,13 +937,13 @@ export default function VideoCallPage() {
                 </Button>
               </div>
 
-              <div>
+              <div className="w-full md:w-auto flex justify-center">
                 <Button
                   variant="destructive"
-                  className="rounded-full px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-2 shadow-lg shadow-red-500/20 hover:scale-105 transition-transform text-xs sm:text-sm"
+                  className="rounded-full px-8 py-4 sm:px-6 sm:py-5 flex items-center gap-2 shadow-lg shadow-red-500/20 hover:scale-105 transition-transform text-sm font-medium w-full md:w-auto"
                   onClick={() => handleEndCallLocal(true)}
                 >
-                  <PhoneOff className="w-4 h-4" />
+                  <PhoneOff className="w-4 h-4 sm:w-5 sm:h-5" />
                   End Call
                 </Button>
               </div>
@@ -966,7 +991,7 @@ export default function VideoCallPage() {
             )}
 
             {}
-            <div className="flex-1 min-h-[220px] bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800 flex items-center justify-center relative">
+            <div className="flex-1 min-h-[250px] lg:min-h-[220px] bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800 flex items-center justify-center relative shadow-inner">
               <div id="yt-player" className="w-full h-full" ref={ytPlayerContainerRef}></div>
               {!currentYtVideoId && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-zinc-500 text-xs space-y-2">

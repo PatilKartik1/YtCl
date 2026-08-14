@@ -13,7 +13,9 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoTitle, setVideoTitle] = useState("");
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const handlefilechange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -39,8 +41,23 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     setIsUploading(false);
     setUploadProgress(0);
     setUploadComplete(false);
+    setThumbnailFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+    if (thumbnailInputRef.current) {
+      thumbnailInputRef.current.value = "";
+    }
+  };
+  const handleThumbnailChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload a valid image file.");
+        return;
+      }
+      setThumbnailFile(file);
     }
   };
   const cancelUpload = () => {
@@ -58,6 +75,9 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     formdata.append("videotitle", videoTitle);
     formdata.append("videochanel", channelName);
     formdata.append("uploader", channelId);
+    if (thumbnailFile) {
+      formdata.append("thumbnail", thumbnailFile);
+    }
     console.log(formdata);
     try {
       setIsUploading(true);
@@ -144,6 +164,34 @@ const VideoUploader = ({ channelId, channelName }: any) => {
                   placeholder="Add a title that describes your video"
                   disabled={isUploading || uploadComplete}
                   className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Thumbnail (optional)</Label>
+                <div 
+                  className="mt-1 border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:bg-muted transition-colors flex flex-col items-center justify-center gap-2"
+                  onClick={() => !isUploading && !uploadComplete && thumbnailInputRef.current?.click()}
+                >
+                  {thumbnailFile ? (
+                    <div className="flex flex-col items-center">
+                      <img src={URL.createObjectURL(thumbnailFile)} alt="Thumbnail" className="h-32 object-contain mb-2 rounded" />
+                      <span className="text-sm">{thumbnailFile.name}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Click to upload thumbnail image</span>
+                    </>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={thumbnailInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleThumbnailChange}
+                  disabled={isUploading || uploadComplete}
                 />
               </div>
             </div>

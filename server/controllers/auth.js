@@ -34,14 +34,19 @@ export const updateprofile = async (req, res) => {
     return res.status(403).json({ message: "Forbidden: You cannot update another user's profile" });
   }
   try {
+    const updateFields = {
+      channelname: channelname,
+      description: description,
+      city: city,
+    };
+    if (req.file) {
+      updateFields.image = `${req.protocol}://${req.get("host")}/${req.file.path.replace(/\\/g, "/")}`;
+    }
+
     const updatedata = await users.findByIdAndUpdate(
       _id,
       {
-        $set: {
-          channelname: channelname,
-          description: description,
-          city: city,
-        },
+        $set: updateFields,
       },
       { new: true },
     );
