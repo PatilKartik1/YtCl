@@ -118,8 +118,10 @@ export default function Upgrade() {
         setLoading(null);
       });
       razor.open();
-    } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || "Unknown error";
+      console.error("Payment setup failed:", error);
+      toast.error(`Something went wrong: ${msg}`);
       setLoading(null);
     }
   };
