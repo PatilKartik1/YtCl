@@ -110,8 +110,11 @@ export default function Upgrade() {
       };
 
       const razor = new (window as any).Razorpay(options);
-      razor.on("payment.failed", () => {
-        toast.error("Payment failed. Please try again.");
+      razor.on("payment.failed", (response: any) => {
+        console.error("Razorpay Payment Failed:", response.error);
+        toast.error(
+          `Payment failed: ${response.error?.description || "Please try again."}`
+        );
         setLoading(null);
       });
       razor.open();

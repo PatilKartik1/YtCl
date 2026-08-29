@@ -20,6 +20,8 @@ import {
   Pause,
   Tv,
   ArrowRight,
+  Maximize,
+  PictureInPicture,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -248,15 +250,7 @@ export default function VideoCallPage() {
 
   useEffect(() => {
     const handleFullscreenChange = async () => {
-      if (document.fullscreenElement) {
-        if (remoteVideoElementRef.current && document.pictureInPictureEnabled && !document.pictureInPictureElement) {
-          try {
-            await remoteVideoElementRef.current.requestPictureInPicture();
-          } catch (e) {
-            console.error("Failed to enter PiP:", e);
-          }
-        }
-      } else {
+      if (!document.fullscreenElement) {
         if (document.pictureInPictureElement) {
           try {
             await document.exitPictureInPicture();
@@ -283,6 +277,7 @@ export default function VideoCallPage() {
           controls: 1,
           rel: 0,
           showinfo: 0,
+          fs: 0,
         },
         events: {
           onReady: () => {
@@ -358,6 +353,27 @@ export default function VideoCallPage() {
         action: "seek",
         time,
       });
+    }
+  };
+
+  const handleCustomFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        if (remoteVideoElementRef.current && document.pictureInPictureEnabled && !document.pictureInPictureElement) {
+          try {
+            await remoteVideoElementRef.current.requestPictureInPicture();
+          } catch (pipError) {
+            console.error("Failed to enter PiP:", pipError);
+          }
+        }
+        if (ytPlayerContainerRef.current) {
+          await ytPlayerContainerRef.current.requestFullscreen();
+        }
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.error("Error toggling fullscreen:", error);
     }
   };
 
@@ -935,6 +951,26 @@ export default function VideoCallPage() {
                 >
                   <Circle className={`w-4 h-4 sm:w-5 sm:h-5 ${isRecording ? "fill-white text-white" : "fill-red-500 text-red-500"}`} />
                 </Button>
+
+                <Button
+                  variant="ghost"
+                  onClick={async () => {
+                    try {
+                      if (document.pictureInPictureElement) {
+                        await document.exitPictureInPicture();
+                      } else if (remoteVideoElementRef.current) {
+                        await remoteVideoElementRef.current.requestPictureInPicture();
+                      }
+                    } catch (error) {
+                      console.error("PiP error:", error);
+                      toast.error("Picture-in-Picture not supported or failed.");
+                    }
+                  }}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full p-0 flex items-center justify-center border transition-all bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-zinc-700"
+                  title="Picture in Picture"
+                >
+                  <PictureInPicture className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
               </div>
 
               <div className="w-full md:w-auto flex justify-center">
@@ -976,7 +1012,6 @@ export default function VideoCallPage() {
               </div>
             </div>
 
-            {}
             {currentYtVideoId && (
               <div className="flex gap-2">
                 <Button
@@ -987,12 +1022,21 @@ export default function VideoCallPage() {
                 >
                   Force Sync Time
                 </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCustomFullscreen}
+                  className="w-full text-[11px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center gap-1"
+                >
+                  <Maximize className="w-3 h-3" />
+                  Fullscreen
+                </Button>
               </div>
             )}
 
             {}
-            <div className="flex-1 min-h-[250px] lg:min-h-[220px] bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800 flex items-center justify-center relative shadow-inner">
-              <div id="yt-player" className="w-full h-full" ref={ytPlayerContainerRef}></div>
+            <div ref={ytPlayerContainerRef} className="flex-1 min-h-[250px] lg:min-h-[220px] bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800 flex items-center justify-center relative shadow-inner">
+              <div id="yt-player" className="w-full h-full"></div>
               {!currentYtVideoId && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-zinc-500 text-xs space-y-2">
                   <Tv className="w-8 h-8 text-zinc-700" />
