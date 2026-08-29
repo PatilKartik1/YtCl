@@ -6,7 +6,7 @@ import nodemailer from "nodemailer";
 
 const getRazorpaySecret = () => process.env.RAZORPAY_KEY_SECRET?.trim();
 
-const razorpay = new Razorpay({
+const getRazorpay = () => new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID?.trim(),
   key_secret: getRazorpaySecret(),
 });
@@ -30,6 +30,7 @@ export const createOrder = async (req, res) => {
   }
 
   try {
+    const razorpay = getRazorpay();
     const order = await razorpay.orders.create({
       amount: planPrices[plan],
       currency: "INR",
@@ -65,6 +66,7 @@ const verifyRazorpayPayment = async ({
   if (signatureValid) return true;
 
   
+  const razorpay = getRazorpay();
   const payment = await razorpay.payments.fetch(paymentId);
   return (
     payment.order_id === orderId &&
