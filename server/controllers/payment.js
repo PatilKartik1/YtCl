@@ -38,7 +38,7 @@ export const createOrder = async (req, res) => {
     return res.status(200).json(order);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Order creation failed" });
+    return res.status(500).json({ message: `Order creation failed: ${error?.error?.description || error.message || JSON.stringify(error)}` });
   }
 };
 

@@ -59,18 +59,25 @@ export const UserProvider = ({ children }) => {
           const response = await axiosInstance.post("/user/login", payload);
           login(response.data.result, response.data.token);
         } catch (error) {
-          console.error(error);
-          logout();
-        }
-      } else {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          try {
-            setUser(JSON.parse(storedUser));
-          } catch (e) {
-            console.error("Failed to parse user from local storage");
+          console.error("Failed to refresh token from backend:", error);
+          // Don't log out — keep whatever is in localStorage as fallback
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) {
+            try {
+              setUser(JSON.parse(storedUser));
+            } catch (e) {
+              console.error("Failed to parse user from local storage");
+              logout();
+            }
+          } else {
+            logout();
           }
         }
+      } else {
+        // Firebase says no user — clear session
+        setUser(null);
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
       }
     });
     return () => unsubcribe();

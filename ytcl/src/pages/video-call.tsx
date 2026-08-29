@@ -359,13 +359,6 @@ export default function VideoCallPage() {
   const handleCustomFullscreen = async () => {
     try {
       if (!document.fullscreenElement) {
-        if (remoteVideoElementRef.current && document.pictureInPictureEnabled && !document.pictureInPictureElement) {
-          try {
-            await remoteVideoElementRef.current.requestPictureInPicture();
-          } catch (pipError) {
-            console.error("Failed to enter PiP:", pipError);
-          }
-        }
         if (ytPlayerContainerRef.current) {
           await ytPlayerContainerRef.current.requestFullscreen();
         }
